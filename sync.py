@@ -1,10 +1,10 @@
 import anki.utils
 
 class ChangeOperation():
-    def __init__(self, note, newSentence, newSentenceAudio):
+    def __init__(self, note):
         self.note = note
-        self.newSentence = newSentence
-        self.newSentenceAudio = newSentenceAudio
+        self.newSentence = note['sentence']
+        self.newSentenceAudio = note['sentence_audio']
 
 class Syncer():
     def __init__(self, resolveConflict, createMedia, notifyUpdate):
@@ -39,7 +39,7 @@ class Syncer():
         if audioFile == None:
             return None
             
-        return ChangeOperation(note, newSentence, '[sound:%s]' % audioFile)
+        return [newSentence, '[sound:%s]' % audioFile]
 
     def sync(self, notes, entries, audioDirectory):
         changeOperations = []
@@ -51,6 +51,9 @@ class Syncer():
             if note == None:
                 notify('invalid note id: %d' % id)
                 continue
+
+            changeOperation = ChangeOperation(note)
+            changeOperations.append(changeOperation)
 
             if note['sentence'] == '':
                 notify('does not have a sentence')
@@ -72,14 +75,16 @@ class Syncer():
                     notify('skipped while resolving conflict')
                     continue
 
-            changeOperation = self.updateNote(note, match, audioDirectory)
+            updateResult = self.updateNote(note, match, audioDirectory)
 
-            if changeOperation == None:
+            if updateResult == None:
                 notify('error creating audio file for %s' % match[0])
                 continue
 
-            changeOperations.append(changeOperation)
-            notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
+            newSentence, newSentenceAudio = updateResult
+            changeOperation.newSentence = newSentence
+            changeOperation.newSentenceAudio = newSentenceAudio
+            notify('match found, audio: %s - sentence: %s' % (newSentenceAudio, newSentence))
         
         return changeOperations
             
