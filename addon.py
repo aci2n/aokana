@@ -6,7 +6,7 @@ from .poreader import Reader
 from .sync import Syncer
 
 class Loader():
-    tag = "aokana"
+    tag = 'aokana'
 
     def __init__(self, api):
         self.api = api
@@ -42,8 +42,15 @@ class Loader():
         notes = map(self.api.getNoteById, self.api.getNotes(query))
         return self.syncer.sync(notes, entries, audioDirectory)
 
-    def confirmChangeOperations(self, dialog, changeOperations):
-        print(changeOperations)
+    def confirmChangeOperations(self, changeOperations):
+        for changeOperation in changeOperations:
+            note = changeOperation.note
+            note['sentence'] = changeOperation.newSentence
+            note['sentence_audio'] = changeOperation.newSentenceAudio
+            if not note.hasTag(self.tag): note.addTag(self.tag)
+            note.flush()
+
+        aqt.utils.showInfo('Updated %d notes!' % len(changeOperations))
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
@@ -58,8 +65,8 @@ class Loader():
 
         return [layout, lineEdit.text]
 
-    def createDialog(self):
-        dialog = self.api.qt.QDialog(self.api.window)
+    def createDialog(self, parent):
+        dialog = self.api.qt.QDialog(parent)
 
         layout = self.api.qt.QFormLayout(dialog)
         layout.setFieldGrowthPolicy(self.api.qt.QFormLayout.ExpandingFieldsGrow)
@@ -87,10 +94,10 @@ class Loader():
             if directory != '':
                 self.writeEntriesFile(directory)
 
-        dialog, layout = self.createDialog()
+        dialog, layout = self.createDialog(self.api.window)
 
         workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker,
-            defaultText = "/Users/alvaro.calace/Documents/aokana/itsusora")
+            defaultText = '/Users/alvaro.calace/Documents/aokana/itsusora')
         layout.addRow('Working directory', workingDirectoryBox)
 
         parseButton = self.api.qt.QPushButton('Parse', dialog)
@@ -106,6 +113,57 @@ class Loader():
 
         return True
 
+    def createChangeOperationsTable(self, parent):
+        def updateTable(changeOperations):
+            table.clear()
+
+            table.setColumnCount(len(headers))
+            table.setRowCount(len(changeOperations))
+            table.setHorizontalHeaderLabels(headers)
+
+            for i, changeOperation in enumerate(changeOperations):
+                fields = enumerate([
+                    changeOperation.note.id,
+                    changeOperation.note['expression'],
+                    changeOperation.note['sentence_audio'],
+                    changeOperation.newSentenceAudio,
+                    changeOperation.note['sentence'],
+                    changeOperation.newSentence
+                ])
+
+                for j, field in fields:
+                    item = self.api.qt.QTableWidgetItem(str(field))
+                    table.setItem(i, j, item)
+
+        table = self.api.qt.QTableWidget(parent)
+        table.resizeColumnsToContents()
+        headers = ['Id', 'Expression', 'Old Audio', 'New Audio', 'Old Sentence', 'New Sentence']
+
+        return [table, updateTable]
+
+    def createConfirmChangeOperationsDialog(self, parent):
+        def setChangeOperations(changeOperations):
+            confirmHandler.changeOperations = changeOperations
+            updateTable(changeOperations)
+
+        def confirmHandler():
+            self.confirmChangeOperations(confirmHandler.changeOperations)
+            setChangeOperations([])
+            dialog.close()
+
+        dialog, layout = self.createDialog(parent)
+
+        changeOperationsTable, updateTable = self.createChangeOperationsTable(dialog)
+        layout.addRow(changeOperationsTable)
+
+        confirmButton = self.api.qt.QPushButton('Confirm', dialog)
+        confirmButton.clicked.connect(confirmHandler)
+        layout.addRow(confirmButton)
+
+        setChangeOperations([])
+
+        return [dialog, setChangeOperations]
+
     def createSyncDialog(self):
         def entriesFilePicker():
             file, _ = self.api.qt.QFileDialog.getOpenFileName(dialog, 'Select the entries file...')
@@ -120,9 +178,10 @@ class Loader():
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
                 changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged())
-                self.confirmChangeOperations(dialog, changeOperations)
+                setChangeOperations(changeOperations)
+                confirmChangeOperationsDialog.exec_()
 
-        dialog, layout = self.createDialog()
+        dialog, layout = self.createDialog(self.api.window)
 
         deckBox, getDeck = self.createFormBox(dialog, defaultText = 'Vocabulary::Mining')
         layout.addRow('Deck', deckBox)
@@ -143,6 +202,8 @@ class Loader():
         syncButton = self.api.qt.QPushButton('Sync', dialog)
         syncButton.clicked.connect(syncButtonClicked)
         layout.addRow(syncButton)
+
+        confirmChangeOperationsDialog, setChangeOperations = self.createConfirmChangeOperationsDialog(dialog)
 
         return dialog
 
