@@ -20,18 +20,18 @@ class Loader():
     def resolveConflict(self, note, matches):
         return matches[0]
 
-    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged):
+    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, dialog):
         entries = None
 
         try:
             with open(file) as data:
                 entries = anki.utils.json.load(data)
         except:
-            aqt.utils.showInfo('Error parsing entries file (%s)' % file)
+            aqt.utils.showInfo('Error parsing entries file (%s)' % file, dialog)
             return
 
         if not self.validateEntries(entries):
-            aqt.utils.showInfo('Invalid entries file (%s)' % file)
+            aqt.utils.showInfo('Invalid entries file (%s)' % file, dialog)
             return
 
         query = 'deck:%s' % deck
@@ -42,7 +42,7 @@ class Loader():
         notes = map(self.api.getNoteById, self.api.getNotes(query))
         return self.syncer.sync(notes, entries, audioDirectory)
 
-    def confirmChangeOperations(self, changeOperations):
+    def confirmChangeOperations(self, changeOperations, dialog):
         for changeOperation in changeOperations:
             note = changeOperation.note
             note['sentence'] = changeOperation.newSentence
@@ -50,7 +50,7 @@ class Loader():
             if not note.hasTag(self.tag): note.addTag(self.tag)
             note.flush()
 
-        aqt.utils.showInfo('Updated %d notes!' % len(changeOperations))
+        aqt.utils.showInfo('Updated %d notes!' % len(changeOperations), dialog)
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
@@ -65,7 +65,7 @@ class Loader():
 
         return [layout, lineEdit.text]
 
-    def createDialog(self, parent):
+    def createFormDialog(self, parent):
         dialog = self.api.qt.QDialog(parent)
 
         layout = self.api.qt.QFormLayout(dialog)
@@ -74,16 +74,16 @@ class Loader():
 
         return [dialog, layout]
 
-    def writeEntriesFile(self, directory):
+    def writeEntriesFile(self, directory, dialog):
         entries = self.reader.read(directory)
         file = anki.utils.os.path.join(directory, 'entries.json')
 
         try:
             with open(file, 'w') as out: 
                 anki.utils.json.dump(entries, out)
-                aqt.utils.showInfo('Saved %d entries to: %s' % (len(entries), file))
+                aqt.utils.showInfo('Saved %d entries to: %s' % (len(entries), file), dialog)
         except Exception as e:
-            print('error saving entries to %s' % file, e)
+            aqt.utils.showInfo('Error saving entries to %s' % file, e, dialog)
 
     def createParseDialog(self):
         def workingDirectoryPicker():
@@ -92,9 +92,9 @@ class Loader():
         def parseButtonClicked():
             directory = getWorkingDirectory()
             if directory != '':
-                self.writeEntriesFile(directory)
+                self.writeEntriesFile(directory, dialog)
 
-        dialog, layout = self.createDialog(self.api.window)
+        dialog, layout = self.createFormDialog(self.api.window)
 
         workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker,
             defaultText = '/Users/alvaro.calace/Documents/aokana/itsusora')
@@ -134,9 +134,10 @@ class Loader():
                 for j, field in fields:
                     item = self.api.qt.QTableWidgetItem(str(field))
                     table.setItem(i, j, item)
+            
+            table.resizeColumnsToContents()
 
         table = self.api.qt.QTableWidget(parent)
-        table.resizeColumnsToContents()
         headers = ['Id', 'Expression', 'Old Audio', 'New Audio', 'Old Sentence', 'New Sentence']
 
         return [table, updateTable]
@@ -147,18 +148,21 @@ class Loader():
             updateTable(changeOperations)
 
         def confirmHandler():
-            self.confirmChangeOperations(confirmHandler.changeOperations)
+            self.confirmChangeOperations(confirmHandler.changeOperations, dialog)
             setChangeOperations([])
             dialog.close()
 
-        dialog, layout = self.createDialog(parent)
+        dialog = self.api.qt.QDialog(parent)
+        
+        layout = self.api.qt.QVBoxLayout(dialog)
+        dialog.setLayout(layout)
 
         changeOperationsTable, updateTable = self.createChangeOperationsTable(dialog)
-        layout.addRow(changeOperationsTable)
+        layout.addWidget(changeOperationsTable)
 
         confirmButton = self.api.qt.QPushButton('Confirm', dialog)
         confirmButton.clicked.connect(confirmHandler)
-        layout.addRow(confirmButton)
+        layout.addWidget(confirmButton)
 
         setChangeOperations([])
 
@@ -177,11 +181,11 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
-                changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged())
+                changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged(), dialog)
                 setChangeOperations(changeOperations)
-                confirmChangeOperationsDialog.exec_()
+                confirmChangeOperationsDialog.showMaximized()
 
-        dialog, layout = self.createDialog(self.api.window)
+        dialog, layout = self.createFormDialog(self.api.window)
 
         deckBox, getDeck = self.createFormBox(dialog, defaultText = 'Vocabulary::Mining')
         layout.addRow('Deck', deckBox)
