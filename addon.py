@@ -6,20 +6,21 @@ from .poreader import Reader
 from .sync import Syncer
 
 class Loader():
+    tag = "aokana"
+
     def __init__(self, api):
         self.api = api
         self.reader = Reader()
-        self.syncer = Syncer(self.api.getNoteById, self.resolveConflict, self.api.saveMedia, self.printResult)
+        self.syncer = Syncer(self.resolveConflict, self.api.saveMedia, self.printResult)
 
-    def printResult(self, result):
-        note, message = result
+    def printResult(self, note, message):
         notification = 'expression: %s: sentence: %s, message: %s' % (note['expression'], note['sentence'], message)
         print(notification)
 
     def resolveConflict(self, note, matches):
         return matches[0]
 
-    def syncEntries(self, file, audioDirectory, deck, onlyUntagged):
+    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged):
         entries = None
 
         try:
@@ -36,11 +37,13 @@ class Loader():
         query = 'deck:%s' % deck
 
         if onlyUntagged:
-            query += ' -tag:%s' % self.syncer.tag
+            query += ' -tag:%s' % self.tag
 
-        notes = self.api.getNotes(query)
-        results = self.syncer.sync(notes, entries, audioDirectory)
-        aqt.utils.showInfo('Done! Processed %d notes.' % len(results))
+        notes = map(self.api.getNoteById, self.api.getNotes(query))
+        return self.syncer.sync(notes, entries, audioDirectory)
+
+    def confirmChangeOperations(self, dialog, changeOperations):
+        print(changeOperations)
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
@@ -116,7 +119,8 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
-                self.syncEntries(file, audioDirectory, deck, getOnlyUntagged())
+                changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged())
+                self.confirmChangeOperations(dialog, changeOperations)
 
         dialog, layout = self.createDialog()
 

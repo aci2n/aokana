@@ -1,10 +1,13 @@
 import anki.utils
 
-class Syncer():
-    tag = "aokana"
+class ChangeOperation():
+    def __init__(self, note, newSentence, newSentenceAudio):
+        self.note = note
+        self.newSentence = newSentence
+        self.newSentenceAudio = newSentenceAudio
 
-    def __init__(self, getNote, resolveConflict, createMedia, notifyUpdate):
-        self.getNote = getNote
+class Syncer():
+    def __init__(self, resolveConflict, createMedia, notifyUpdate):
         self.resolveConflict = resolveConflict
         self.createMedia = createMedia
         self.notifyUpdate = notifyUpdate
@@ -30,50 +33,34 @@ class Syncer():
             return None
 
     def updateNote(self, note, match, audioDirectory):
-        audioKey, sentence = match
+        audioKey, newSentence = match
         audioFile = self.copyAudioFile(audioDirectory, audioKey)
 
         if audioFile == None:
-            return 'error creating media file for %s' % audioKey
+            return None
             
-        note['sentence'] = sentence
-        note['sentence_audio'] = '[sound:%s]' % audioFile
-        note.flush()
-
-        return 'updated, sentence_audio: %s - sentence: %s' % (note['sentence_audio'], note['sentence'])
+        return ChangeOperation(note, newSentence, '[sound:%s]' % audioFile)
 
     def sync(self, notes, entries, audioDirectory):
-        results = []
+        changeOperations = []
 
-        for id in notes:
-            note = self.getNote(id)
-
-            def addResult(message):
-                result = [note, message]
-                self.notifyUpdate(result)
-                results.append(result)
+        for note in notes:
+            def notify(message):
+                self.notifyUpdate(note, message)
 
             if note == None:
-                addResult('invalid note id: %d' % id)
+                notify('invalid note id: %d' % id)
                 continue
-
-            if not note.hasTag(self.tag):
-                note.addTag(self.tag)
-                note.flush()
 
             if note['sentence'] == '':
-                addResult('does not have a sentence')
+                notify('does not have a sentence')
                 continue
             
-            if note['sentence_audio'] != '':
-                addResult('already has sentence audio')
-                continue
-
             matches = self.findMatches(note['sentence'], entries)
             count = len(matches)
 
             if count == 0:
-                addResult('had no matches')
+                notify('had no matches')
                 continue
 
             if count == 1:
@@ -82,13 +69,19 @@ class Syncer():
                 match = self.resolveConflict(note, matches)
 
                 if match == None:
-                    addResult('skipped while resolving conflict')
+                    notify('skipped while resolving conflict')
                     continue
 
-            updateResult = self.updateNote(note, match, audioDirectory)
-            addResult(updateResult)
+            changeOperation = self.updateNote(note, match, audioDirectory)
+
+            if changeOperation == None:
+                notify('error creating audio file for %s' % match[0])
+                continue
+
+            changeOperations.append(changeOperation)
+            notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
         
-        return results
+        return changeOperations
             
 
 
