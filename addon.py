@@ -23,16 +23,20 @@ class Loader():
     def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, dialog):
         entries = None
 
+        if not anki.utils.os.path.isdir(audioDirectory):
+            aqt.utils.showInfo('%s is not a directory' % audioDirectory, dialog)
+            return None
+
         try:
             with open(file) as data:
                 entries = anki.utils.json.load(data)
         except:
             aqt.utils.showInfo('Error parsing entries file (%s)' % file, dialog)
-            return
+            return None
 
         if not self.validateEntries(entries):
             aqt.utils.showInfo('Invalid entries file (%s)' % file, dialog)
-            return
+            return None
 
         query = 'deck:%s' % deck
 
@@ -50,6 +54,7 @@ class Loader():
             if not note.hasTag(self.tag): note.addTag(self.tag)
             note.flush()
 
+        self.api.saveCollection()
         aqt.utils.showInfo('Updated %d notes!' % len(changeOperations), dialog)
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
@@ -182,8 +187,10 @@ class Loader():
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
                 changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged(), dialog)
-                setChangeOperations(changeOperations)
-                confirmChangeOperationsDialog.showMaximized()
+
+                if changeOperations != None:
+                    setChangeOperations(changeOperations)
+                    confirmChangeOperationsDialog.showMaximized()
 
         dialog, layout = self.createFormDialog(self.api.window)
 

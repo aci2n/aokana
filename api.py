@@ -19,3 +19,6 @@ class Anki():
 
     def saveMedia(self, path, data):
         return self.window.col.media.writeData(path, data)
+
+    def saveCollection(self):
+        return self.window.col.save()
