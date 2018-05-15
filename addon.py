@@ -80,6 +80,13 @@ class Loader():
 
         return dialog
 
+    def validateEntries(self, entries):
+        for key, value in entries.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                return False
+
+        return True
+
     def createSyncDialog(self):
         def entriesFilePicker():
             file, _ = self.api.qt.QFileDialog.getOpenFileName(dialog, 'Select the entries file...')
@@ -93,7 +100,7 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
 
-            if file == '' or audioDirectory == '':
+            if file == '' or audioDirectory == '' or deck == '':
                 return
 
             entries = None
@@ -102,10 +109,13 @@ class Loader():
                 with open(file) as data:
                     entries = anki.utils.json.load(data)
             except:
-                aqt.utils.showInfo('Invalid file (%s)' % file)
+                aqt.utils.showInfo('Error parsing entries file (%s)' % file)
                 return
 
-            self.syncEntries(entries, audioDirectory, deck)
+            if self.validateEntries(entries):
+                self.syncEntries(entries, audioDirectory, deck)
+            else:
+                aqt.utils.showInfo('Invalid entries file (%s)' % file)
 
         dialog, layout = self.createDialog()
         deckBox, getDeck = self.createPickerBox('Deck name', None, dialog)
