@@ -7,6 +7,9 @@ class Anki():
 
     def addToolsMenuAction(self, action):
         return self.window.form.menuTools.addAction(action)
+
+    def addToolsMenuSeparator(self):
+        return self.window.form.menuTools.addSeparator()
     
     def getNotesInDeck(self, deck):
         return self.window.col.findNotes('deck:%s' % deck)
