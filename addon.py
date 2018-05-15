@@ -9,15 +9,12 @@ class Loader():
     def __init__(self, api):
         self.api = api
         self.reader = Reader()
-        self.syncer = Syncer(self.api.getNoteById, self.resolveConflict, self.notifyUpdate, self.api.saveMedia)
+        self.syncer = Syncer(self.api.getNoteById, self.resolveConflict, self.api.saveMedia)
 
     def resolveConflict(self, note, matches):
         return matches[0]
 
-    def notifyUpdate(self, result):
-        return None
-
-    def syncEntries(self, file, audioDirectory, deck):
+    def syncEntries(self, file, audioDirectory, deck, notifyUpdate):
         entries = None
 
         try:
@@ -27,28 +24,26 @@ class Loader():
             aqt.utils.showInfo('Error parsing entries file (%s)' % file)
             return
 
-        if self.validateEntries(entries):
-            self.syncEntries(entries, audioDirectory, deck)
-        else:
+        if not self.validateEntries(entries):
             aqt.utils.showInfo('Invalid entries file (%s)' % file)
             return
 
         notes = self.api.getNotesInDeck(deck)
 
-        return self.syncer.sync(notes, entries, audioDirectory)
+        return self.syncer.sync(notes, entries, audioDirectory, notifyUpdate)
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
 
-        textEdit = self.api.qt.QLineEdit(defaultText, parent)
-        layout.addWidget(textEdit)
+        lineEdit = self.api.qt.QLineEdit(defaultText, parent)
+        layout.addWidget(lineEdit)
 
         if pickerHandler != None:
             button = self.api.qt.QPushButton(buttonText, parent)
-            button.clicked.connect(lambda: textEdit.setText(pickerHandler()))
+            button.clicked.connect(lambda: lineEdit.setText(pickerHandler()))
             layout.addWidget(button)
 
-        return [layout, lambda: textEdit.toPlainText()]
+        return [layout, lineEdit.text]
 
     def createDialog(self):
         dialog = self.api.qt.QDialog(self.api.window)
@@ -96,6 +91,11 @@ class Loader():
         return True
 
     def createSyncDialog(self):
+        def updateNotificationsLabel(result):
+            note, message = result
+            notification = '%s: %s' % (note['expression'], message)
+            notificationsLabel.setText(notificationsLabel.text() + '\n' + notification)
+
         def entriesFilePicker():
             file, _ = self.api.qt.QFileDialog.getOpenFileName(dialog, 'Select the entries file...')
             return file
@@ -107,18 +107,24 @@ class Loader():
             file = getEntriesFile()
             audioDirectory = getAudioDirectory()
             deck = getDeck()
-            if file != '' and audioDirectory != '' and deck != '': self.syncEntries(file, audioDirectory, deck)
+            if file != '' and audioDirectory != '' and deck != '':
+                self.syncEntries(file, audioDirectory, deck, updateNotificationsLabel)
 
         dialog, layout = self.createDialog()
 
-        deckBox, getDeck = self.createFormBox(dialog)
+        deckBox, getDeck = self.createFormBox(dialog, defaultText = 'Vocabulary::Mining')
         layout.addRow('Deck', deckBox)
 
-        entriesFileBox, getEntriesFile = self.createFormBox(dialog, entriesFilePicker)
+        entriesFileBox, getEntriesFile = self.createFormBox(dialog, entriesFilePicker,
+            defaultText = '/Users/alvaro.calace/Documents/aokana/itsusora/entries.json')
         layout.addRow('Entries file', entriesFileBox)
 
-        audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker)
+        audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker,
+            defaultText = '/Users/alvaro.calace/Documents/aokana/ogg')
         layout.addRow('Audio directory', audioDirectoryBox)
+
+        notificationsLabel = self.api.qt.QLabel(dialog)
+        layout.addRow('Results', notificationsLabel)
 
         syncButton = self.api.qt.QPushButton('Sync', dialog)
         syncButton.clicked.connect(syncButtonClicked)

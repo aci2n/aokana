@@ -3,10 +3,9 @@ import anki.utils
 class Syncer():
     tag = "aokana3"
 
-    def __init__(self, getNote, resolveConflict, notifyUpdate, createMedia):
+    def __init__(self, getNote, resolveConflict, createMedia):
         self.getNote = getNote
         self.resolveConflict = resolveConflict
-        self.notifyUpdate = notifyUpdate
         self.createMedia = createMedia
 
     def findMatches(self, sentence, entries):
@@ -44,7 +43,7 @@ class Syncer():
 
         return 'updated, sentence_audio: %s - sentence: %s' % (sentenceAudio, sentence)
 
-    def sync(self, notes, entries, audioDirectory):
+    def sync(self, notes, entries, audioDirectory, notifyUpdate):
         results = []
 
         for id in notes:
@@ -52,7 +51,7 @@ class Syncer():
 
             def addResult(message):
                 result = [note, message]
-                self.notifyUpdate(result)
+                notifyUpdate(result)
                 results.append(result)
 
             if note == None:
