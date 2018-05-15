@@ -8,9 +8,11 @@ class Reader():
         exp = directory + '/**/*.pot'
 
         for file in glob.glob(exp):
+            print('reading %s' % file)
             entries = polib.pofile(file)
 
             if entries != None:
+                print('found %d entries in %s' % (len(entries), file))
                 voiceEntries = filter(lambda entry: entry.comment == 'VOICE', entries)
                 
                 for voiceEntry in voiceEntries:

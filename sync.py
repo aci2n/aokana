@@ -1,7 +1,7 @@
 import anki.utils
 
 class Syncer():
-    tag = "aokana3"
+    tag = "aokana4"
 
     def __init__(self, getNote, resolveConflict, createMedia, notifyUpdate):
         self.getNote = getNote

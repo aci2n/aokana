@@ -68,11 +68,12 @@ class Loader():
         entries = self.reader.read(directory)
         file = anki.utils.os.path.join(directory, 'entries.json')
 
-        with open(file, 'w') as out:  
-            anki.utils.json.dump(entries, out)
-            aqt.utils.showInfo('Saved entries to: %s' % file)
-
-        return file
+        try:
+            with open(file, 'w') as out: 
+                anki.utils.json.dump(entries, out)
+                aqt.utils.showInfo('Saved %d entries to: %s' % (len(entries), file))
+        except Exception as e:
+            print('error saving entries to %s' % file, e)
 
     def createParseDialog(self):
         def workingDirectoryPicker():
@@ -80,11 +81,13 @@ class Loader():
 
         def parseButtonClicked():
             directory = getWorkingDirectory()
-            if directory != '': self.writeEntriesFile(directory)
+            if directory != '':
+                self.writeEntriesFile(directory)
 
         dialog, layout = self.createDialog()
 
-        workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker)
+        workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker,
+            defaultText = "/Users/alvaro.calace/Documents/aokana/itsusora")
         layout.addRow('Working directory', workingDirectoryBox)
 
         parseButton = self.api.qt.QPushButton('Parse', dialog)
