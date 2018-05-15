@@ -9,12 +9,17 @@ class Loader():
     def __init__(self, api):
         self.api = api
         self.reader = Reader()
-        self.syncer = Syncer(self.api.getNoteById, self.resolveConflict, self.api.saveMedia)
+        self.syncer = Syncer(self.api.getNoteById, self.resolveConflict, self.api.saveMedia, self.printResult)
+
+    def printResult(self, result):
+        note, message = result
+        notification = 'expression: %s: sentence: %s, message: %s' % (note['expression'], note['sentence'], message)
+        print(notification)
 
     def resolveConflict(self, note, matches):
         return matches[0]
 
-    def syncEntries(self, file, audioDirectory, deck, notifyUpdate):
+    def syncEntries(self, file, audioDirectory, deck):
         entries = None
 
         try:
@@ -30,7 +35,12 @@ class Loader():
 
         notes = self.api.getNotesInDeck(deck)
 
-        return self.syncer.sync(notes, entries, audioDirectory, notifyUpdate)
+        if len(notes) == 0:
+            aqt.utils.showInfo('No notes found in deck %s' % deck)
+            return
+
+        results = self.syncer.sync(notes, entries, audioDirectory)
+        aqt.utils.showInfo('Done! Processed %d notes.' % len(results))
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
@@ -91,11 +101,6 @@ class Loader():
         return True
 
     def createSyncDialog(self):
-        def updateNotificationsLabel(result):
-            note, message = result
-            notification = '%s: %s' % (note['expression'], message)
-            notificationsLabel.setText(notificationsLabel.text() + '\n' + notification)
-
         def entriesFilePicker():
             file, _ = self.api.qt.QFileDialog.getOpenFileName(dialog, 'Select the entries file...')
             return file
@@ -108,7 +113,7 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
-                self.syncEntries(file, audioDirectory, deck, updateNotificationsLabel)
+                self.syncEntries(file, audioDirectory, deck)
 
         dialog, layout = self.createDialog()
 
@@ -122,9 +127,6 @@ class Loader():
         audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker,
             defaultText = '/Users/alvaro.calace/Documents/aokana/ogg')
         layout.addRow('Audio directory', audioDirectoryBox)
-
-        notificationsLabel = self.api.qt.QLabel(dialog)
-        layout.addRow('Results', notificationsLabel)
 
         syncButton = self.api.qt.QPushButton('Sync', dialog)
         syncButton.clicked.connect(syncButtonClicked)
