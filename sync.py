@@ -1,8 +1,6 @@
 import anki.utils
 
 class Syncer():
-    tag = "aokana4"
-
     def __init__(self, getNote, resolveConflict, createMedia, notifyUpdate):
         self.getNote = getNote
         self.resolveConflict = resolveConflict
@@ -14,7 +12,7 @@ class Syncer():
 
         for audioKey, text in entries.items():
             if sentence in text:
-                matches.append([audioKey, text])
+                matches.append([audioKey.lower(), text])
 
         return matches
 
@@ -39,7 +37,6 @@ class Syncer():
         sentenceAudio = '[sound:%s]' % audioFile
         note['sentence'] = sentence
         note['sentence_audio'] = sentenceAudio
-        note.addTag(self.tag)
         note.flush()
 
         return 'updated, sentence_audio: %s - sentence: %s' % (sentenceAudio, sentence)
@@ -63,8 +60,8 @@ class Syncer():
                 addResult('does not have a sentence')
                 continue
             
-            if note.hasTag(self.tag):
-                addResult('was already processed')
+            if note['sentence_audio'] != '':
+                addResult('already has sentence audio')
                 continue
 
             matches = self.findMatches(note['sentence'], entries)

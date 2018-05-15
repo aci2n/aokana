@@ -144,5 +144,5 @@ class Loader():
 
     def load(self):
         self.api.addToolsMenuSeparator()
-        self.addActionWithDialog('Parse 蒼の彼方', self.createParseDialog())
-        self.addActionWithDialog('Sync 蒼の彼方', self.createSyncDialog())
+        self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
+        self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog())
