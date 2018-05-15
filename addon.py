@@ -37,30 +37,24 @@ class Loader():
 
         return self.syncer.sync(notes, entries, audioDirectory)
 
-    def createPickerBox(self, labelText, picker, parent):
-        box = self.api.qt.QWidget(parent)
-        layout = self.api.qt.QHBoxLayout(box)
-        label = self.api.qt.QLabel(labelText, box)
-        textEdit = self.api.qt.QTextEdit(box)
+    def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
+        layout = self.api.qt.QHBoxLayout()
 
-        layout.addWidget(label)
+        textEdit = self.api.qt.QLineEdit(defaultText, parent)
         layout.addWidget(textEdit)
-        box.setLayout(layout)
 
-        if picker != None:
-            button = self.api.qt.QPushButton('Select', box)
-            button.clicked.connect(lambda: textEdit.setText(picker()))
+        if pickerHandler != None:
+            button = self.api.qt.QPushButton(buttonText, parent)
+            button.clicked.connect(lambda: textEdit.setText(pickerHandler()))
             layout.addWidget(button)
 
-        def getText():
-            return textEdit.toPlainText()
-
-        return [box, getText]
+        return [layout, lambda: textEdit.toPlainText()]
 
     def createDialog(self):
         dialog = self.api.qt.QDialog(self.api.window)
-        layout = self.api.qt.QVBoxLayout(dialog)
 
+        layout = self.api.qt.QFormLayout(dialog)
+        layout.setFieldGrowthPolicy(self.api.qt.QFormLayout.ExpandingFieldsGrow)
         dialog.setLayout(layout)
 
         return [dialog, layout]
@@ -76,23 +70,21 @@ class Loader():
         return file
 
     def createParseDialog(self):
-        def filePicker():
+        def workingDirectoryPicker():
             return self.api.qt.QFileDialog.getExistingDirectory(dialog, 'Select the working directory...')
 
         def parseButtonClicked():
             directory = getWorkingDirectory()
-
-            if directory != '':
-                self.writeEntriesFile(directory)
+            if directory != '': self.writeEntriesFile(directory)
 
         dialog, layout = self.createDialog()
-        workingDirectoryBox, getWorkingDirectory = self.createPickerBox('Working directory', filePicker, dialog)
+
+        workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker)
+        layout.addRow('Working directory', workingDirectoryBox)
+
         parseButton = self.api.qt.QPushButton('Parse', dialog)
-
         parseButton.clicked.connect(parseButtonClicked)
-
-        layout.addWidget(workingDirectoryBox)
-        layout.addWidget(parseButton)
+        layout.addRow(parseButton)
 
         return dialog
 
@@ -115,22 +107,22 @@ class Loader():
             file = getEntriesFile()
             audioDirectory = getAudioDirectory()
             deck = getDeck()
-
-            if file != '' and audioDirectory != '' and deck != '':
-                self.syncEntries(file, audioDirectory, deck)
+            if file != '' and audioDirectory != '' and deck != '': self.syncEntries(file, audioDirectory, deck)
 
         dialog, layout = self.createDialog()
-        deckBox, getDeck = self.createPickerBox('Deck name', None, dialog)
-        entriesFileBox, getEntriesFile = self.createPickerBox('Entries file', entriesFilePicker, dialog)
-        audioDirectoryBox, getAudioDirectory = self.createPickerBox('Audio directory', audioDirectoryPicker, dialog)
+
+        deckBox, getDeck = self.createFormBox(dialog)
+        layout.addRow('Deck', deckBox)
+
+        entriesFileBox, getEntriesFile = self.createFormBox(dialog, entriesFilePicker)
+        layout.addRow('Entries file', entriesFileBox)
+
+        audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker)
+        layout.addRow('Audio directory', audioDirectoryBox)
+
         syncButton = self.api.qt.QPushButton('Sync', dialog)
-
         syncButton.clicked.connect(syncButtonClicked)
-
-        layout.addWidget(deckBox)
-        layout.addWidget(entriesFileBox)
-        layout.addWidget(audioDirectoryBox)
-        layout.addWidget(syncButton)
+        layout.addRow(syncButton)
 
         return dialog
 
