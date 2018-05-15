@@ -11,8 +11,8 @@ class Anki():
     def addToolsMenuSeparator(self):
         return self.window.form.menuTools.addSeparator()
     
-    def getNotesInDeck(self, deck):
-        return self.window.col.findNotes('deck:%s' % deck)
+    def getNotes(self, query):
+        return self.window.col.findNotes(query)
 
     def getNoteById(self, id):
         return self.window.col.getNote(id)

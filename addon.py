@@ -19,7 +19,7 @@ class Loader():
     def resolveConflict(self, note, matches):
         return matches[0]
 
-    def syncEntries(self, file, audioDirectory, deck):
+    def syncEntries(self, file, audioDirectory, deck, onlyUntagged):
         entries = None
 
         try:
@@ -33,12 +33,12 @@ class Loader():
             aqt.utils.showInfo('Invalid entries file (%s)' % file)
             return
 
-        notes = self.api.getNotesInDeck(deck)
+        query = 'deck:%s' % deck
 
-        if len(notes) == 0:
-            aqt.utils.showInfo('No notes found in deck %s' % deck)
-            return
+        if onlyUntagged:
+            query += ' -tag:%s' % self.syncer.tag
 
+        notes = self.api.getNotes(query)
         results = self.syncer.sync(notes, entries, audioDirectory)
         aqt.utils.showInfo('Done! Processed %d notes.' % len(results))
 
@@ -116,7 +116,7 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
-                self.syncEntries(file, audioDirectory, deck)
+                self.syncEntries(file, audioDirectory, deck, getOnlyUntagged())
 
         dialog, layout = self.createDialog()
 
@@ -130,6 +130,11 @@ class Loader():
         audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker,
             defaultText = '/Users/alvaro.calace/Documents/aokana/ogg')
         layout.addRow('Audio directory', audioDirectoryBox)
+
+        onlyUntaggedCheckBox = self.api.qt.QCheckBox(dialog)
+        onlyUntaggedCheckBox.setChecked(True)
+        getOnlyUntagged = onlyUntaggedCheckBox.isChecked
+        layout.addRow('Only untagged', onlyUntaggedCheckBox)
 
         syncButton = self.api.qt.QPushButton('Sync', dialog)
         syncButton.clicked.connect(syncButtonClicked)

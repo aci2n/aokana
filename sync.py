@@ -1,6 +1,8 @@
 import anki.utils
 
 class Syncer():
+    tag = "aokana"
+
     def __init__(self, getNote, resolveConflict, createMedia, notifyUpdate):
         self.getNote = getNote
         self.resolveConflict = resolveConflict
@@ -34,12 +36,11 @@ class Syncer():
         if audioFile == None:
             return 'error creating media file for %s' % audioKey
             
-        sentenceAudio = '[sound:%s]' % audioFile
         note['sentence'] = sentence
-        note['sentence_audio'] = sentenceAudio
+        note['sentence_audio'] = '[sound:%s]' % audioFile
         note.flush()
 
-        return 'updated, sentence_audio: %s - sentence: %s' % (sentenceAudio, sentence)
+        return 'updated, sentence_audio: %s - sentence: %s' % (note['sentence_audio'], note['sentence'])
 
     def sync(self, notes, entries, audioDirectory):
         results = []
@@ -55,6 +56,10 @@ class Syncer():
             if note == None:
                 addResult('invalid note id: %d' % id)
                 continue
+
+            if not note.hasTag(self.tag):
+                note.addTag(self.tag)
+                note.flush()
 
             if note['sentence'] == '':
                 addResult('does not have a sentence')
