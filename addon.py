@@ -8,13 +8,8 @@ from .sync import Syncer
 class Loader():
     def __init__(self, api):
         self.api = api
-
-        self.syncer = Syncer(
-            self.api.getNoteById,
-            self.resolveConflict,
-            self.notifyUpdate,
-            self.api.saveMedia
-        )
+        self.reader = Reader()
+        self.syncer = Syncer(self.api.getNoteById, self.resolveConflict, self.notifyUpdate, self.api.saveMedia)
 
     def resolveConflict(self, note, matches):
         return matches[0]
@@ -22,8 +17,24 @@ class Loader():
     def notifyUpdate(self, result):
         return None
 
-    def syncEntries(self, entries, audioDirectory, deck):
+    def syncEntries(self, file, audioDirectory, deck):
+        entries = None
+
+        try:
+            with open(file) as data:
+                entries = anki.utils.json.load(data)
+        except:
+            aqt.utils.showInfo('Error parsing entries file (%s)' % file)
+            return
+
+        if self.validateEntries(entries):
+            self.syncEntries(entries, audioDirectory, deck)
+        else:
+            aqt.utils.showInfo('Invalid entries file (%s)' % file)
+            return
+
         notes = self.api.getNotesInDeck(deck)
+
         return self.syncer.sync(notes, entries, audioDirectory)
 
     def createPickerBox(self, labelText, picker, parent):
@@ -54,6 +65,16 @@ class Loader():
 
         return [dialog, layout]
 
+    def writeEntriesFile(self, directory):
+        entries = self.reader.read(directory)
+        file = anki.utils.os.path.join(directory, 'entries.json')
+
+        with open(file, 'w') as out:  
+            anki.utils.json.dump(entries, out)
+            aqt.utils.showInfo('Saved entries to: %s' % file)
+
+        return file
+
     def createParseDialog(self):
         def filePicker():
             return self.api.qt.QFileDialog.getExistingDirectory(dialog, 'Select the working directory...')
@@ -62,12 +83,7 @@ class Loader():
             directory = getWorkingDirectory()
 
             if directory != '':
-                entries = Reader().read(directory)
-                file = anki.utils.os.path.join(directory, 'entries.json')
-
-                with open(file, 'w') as out:  
-                    anki.utils.json.dump(entries, out)
-                    aqt.utils.showInfo('Saved entries to: %s' % file)
+                self.writeEntriesFile(directory)
 
         dialog, layout = self.createDialog()
         workingDirectoryBox, getWorkingDirectory = self.createPickerBox('Working directory', filePicker, dialog)
@@ -100,22 +116,8 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
 
-            if file == '' or audioDirectory == '' or deck == '':
-                return
-
-            entries = None
-
-            try:
-                with open(file) as data:
-                    entries = anki.utils.json.load(data)
-            except:
-                aqt.utils.showInfo('Error parsing entries file (%s)' % file)
-                return
-
-            if self.validateEntries(entries):
-                self.syncEntries(entries, audioDirectory, deck)
-            else:
-                aqt.utils.showInfo('Invalid entries file (%s)' % file)
+            if file != '' and audioDirectory != '' and deck != '':
+                self.syncEntries(file, audioDirectory, deck)
 
         dialog, layout = self.createDialog()
         deckBox, getDeck = self.createPickerBox('Deck name', None, dialog)
