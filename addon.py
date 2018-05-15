@@ -3,67 +3,124 @@ import urllib.parse
 import anki.utils
 import aqt.utils
 from .poreader import Reader
+from .sync import Syncer
 
 class Loader():
     def __init__(self, api):
         self.api = api
 
-    def syncEntries(self, entries):
-        return
+        self.syncer = Syncer(
+            self.api.getNoteById,
+            self.resolveConflict,
+            self.notifyUpdate,
+            self.api.saveMedia
+        )
 
-    def createDialog(self, labelInputTitle, buttonRunTitle, filePicker, buttonRunClicked):
+    def resolveConflict(self, note, matches):
+        return matches[0]
+
+    def notifyUpdate(self, result):
+        return None
+
+    def syncEntries(self, entries, audioDirectory, deck):
+        notes = self.api.getNotesInDeck(deck)
+        return self.syncer.sync(notes, entries, audioDirectory)
+
+    def createPickerBox(self, labelText, picker, parent):
+        box = self.api.qt.QWidget(parent)
+        layout = self.api.qt.QHBoxLayout(box)
+        label = self.api.qt.QLabel(labelText, box)
+        textEdit = self.api.qt.QTextEdit(box)
+
+        layout.addWidget(label)
+        layout.addWidget(textEdit)
+        box.setLayout(layout)
+
+        if picker != None:
+            button = self.api.qt.QPushButton('Select', box)
+            button.clicked.connect(lambda: textEdit.setText(picker()))
+            layout.addWidget(button)
+
+        def getText():
+            return textEdit.toPlainText()
+
+        return [box, getText]
+
+    def createDialog(self):
         dialog = self.api.qt.QDialog(self.api.window)
-        layout = self.api.qt.QGridLayout(dialog)
+        layout = self.api.qt.QVBoxLayout(dialog)
+
         dialog.setLayout(layout)
 
-        labelInput = self.api.qt.QLabel(labelInputTitle, dialog)
-        textEditInput = self.api.qt.QTextEdit(dialog)
-        buttonInput = self.api.qt.QPushButton('Select', dialog)
-
-        buttonRun = self.api.qt.QPushButton(buttonRunTitle, dialog)
-
-        layout.addWidget(labelInput, 0, 0)
-        layout.addWidget(textEditInput, 0, 1)
-        layout.addWidget(buttonInput, 0, 2)
-
-        layout.addWidget(buttonRun, 2, 1)
-
-        def buttonInputClicked():
-            textEditInput.setText(filePicker(dialog))
-
-        buttonInput.clicked.connect(buttonInputClicked)
-        buttonRun.clicked.connect(lambda: buttonRunClicked(textEditInput.toPlainText()))
-
-        return dialog
+        return [dialog, layout]
 
     def createParseDialog(self):
-        def filePicker(dialog):
+        def filePicker():
             return self.api.qt.QFileDialog.getExistingDirectory(dialog, 'Select the working directory...')
 
-        def parseButtonClicked(directory):
+        def parseButtonClicked():
+            directory = getWorkingDirectory()
+
             if directory != '':
                 entries = Reader().read(directory)
                 file = anki.utils.os.path.join(directory, 'entries.json')
 
                 with open(file, 'w') as out:  
                     anki.utils.json.dump(entries, out)
+                    aqt.utils.showInfo('Saved entries to: %s' % file)
 
-        return self.createDialog('Working directory', 'Parse', filePicker, parseButtonClicked)
+        dialog, layout = self.createDialog()
+        workingDirectoryBox, getWorkingDirectory = self.createPickerBox('Working directory', filePicker, dialog)
+        parseButton = self.api.qt.QPushButton('Parse', dialog)
+
+        parseButton.clicked.connect(parseButtonClicked)
+
+        layout.addWidget(workingDirectoryBox)
+        layout.addWidget(parseButton)
+
+        return dialog
 
     def createSyncDialog(self):
-        def filePicker(dialog):
+        def entriesFilePicker():
             file, _ = self.api.qt.QFileDialog.getOpenFileName(dialog, 'Select the entries file...')
             return file
 
-        def syncButtonClicked(file):
+        def audioDirectoryPicker():
+            return self.api.qt.QFileDialog.getExistingDirectory(dialog, 'Select the audio files directory...')
+
+        def syncButtonClicked():
+            file = getEntriesFile()
+            audioDirectory = getAudioDirectory()
+            deck = getDeck()
+
+            if file == '' or audioDirectory == '':
+                return
+
+            entries = None
+
             try:
                 with open(file) as data:
                     entries = anki.utils.json.load(data)
-                    self.syncEntries(entries)
             except:
                 aqt.utils.showInfo('Invalid file (%s)' % file)
+                return
 
-        return self.createDialog('Entries file', 'Sync', filePicker, syncButtonClicked)
+            self.syncEntries(entries, audioDirectory, deck)
+
+        dialog, layout = self.createDialog()
+        deckBox, getDeck = self.createPickerBox('Deck name', None, dialog)
+        entriesFileBox, getEntriesFile = self.createPickerBox('Entries file', entriesFilePicker, dialog)
+        audioDirectoryBox, getAudioDirectory = self.createPickerBox('Audio directory', audioDirectoryPicker, dialog)
+        syncButton = self.api.qt.QPushButton('Sync', dialog)
+
+        syncButton.clicked.connect(syncButtonClicked)
+
+        layout.addWidget(deckBox)
+        layout.addWidget(entriesFileBox)
+        layout.addWidget(audioDirectoryBox)
+        layout.addWidget(syncButton)
+
+        return dialog
 
     def addActionWithDialog(self, title, dialog):
         action = self.api.qt.QAction(title, self.api.window)
