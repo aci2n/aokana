@@ -16,12 +16,12 @@ class Syncer():
         expressionMatches = []
 
         for audioKey, text in entries.items():
-            key = audioKey.lower()
+            match = [audioKey.lower(), text]
 
             if sentence != '' and sentence in text:
-                sentenceMatches.append([key, text])
-            if expression in text:
-                expressionMatches.append([key, text])
+                sentenceMatches.append(match)
+            elif expression in text:
+                expressionMatches.append(match)
 
         return sentenceMatches + expressionMatches
 
