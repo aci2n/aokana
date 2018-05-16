@@ -72,7 +72,7 @@ class Loader():
             button.clicked.connect(lambda: lineEdit.setText(pickerHandler()))
             layout.addWidget(button)
 
-        return layout, lineEdit.text
+        return layout, lineEdit.text, lineEdit.setText
 
     def createFormDialog(self, parent):
         dialog = self.api.qt.QDialog(parent)
@@ -105,7 +105,7 @@ class Loader():
 
         dialog, layout = self.createFormDialog(self.api.window)
 
-        workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker,
+        workingDirectoryBox, getWorkingDirectory, _ = self.createFormBox(dialog, workingDirectoryPicker,
             defaultText = self.config['defaultWorkingDirectory'])
         layout.addRow('Working directory', workingDirectoryBox)
 
@@ -229,26 +229,36 @@ class Loader():
                     confirmChangeOperationsDialog.showMaximized()
 
         def openDialog():
+            note = self.api.getCurrentReviewerNote()
+            
+            if note != None:
+                setExtendedQuery('nid:%d' % note.id)
+                skipTaggedCheckbox.setChecked(False)
+                resolveManuallyCheckbox.setChecked(True)
+            else:
+                setExtendedQuery('')
+                skipTaggedCheckbox.setChecked(True)
+                resolveManuallyCheckbox.setChecked(False)
+
             dialog.exec_()
 
         dialog, layout = self.createFormDialog(self.api.window)
 
-        deckBox, getDeck = self.createFormBox(dialog, defaultText = self.config['defaultDeck'])
+        deckBox, getDeck, _ = self.createFormBox(dialog, defaultText = self.config['defaultDeck'])
         layout.addRow('Deck', deckBox)
 
-        entriesFileBox, getEntriesFile = self.createFormBox(dialog, entriesFilePicker,
+        entriesFileBox, getEntriesFile, _ = self.createFormBox(dialog, entriesFilePicker,
             defaultText = self.config['defaultEntriesFile'])
         layout.addRow('Entries file', entriesFileBox)
 
-        audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker,
+        audioDirectoryBox, getAudioDirectory, _ = self.createFormBox(dialog, audioDirectoryPicker,
             defaultText = self.config['defaultAudioDirectory'])
         layout.addRow('Audio directory', audioDirectoryBox)
 
-        extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
+        extendedQueryBox, getExtendedQuery, setExtendedQuery = self.createFormBox(dialog)
         layout.addRow('Extended query', extendedQueryBox)
 
         skipTaggedCheckbox = self.api.qt.QCheckBox(dialog)
-        skipTaggedCheckbox.setChecked(True)
         getSkipTagged = skipTaggedCheckbox.isChecked
         layout.addRow('Skip tagged', skipTaggedCheckbox)
 
@@ -274,5 +284,4 @@ class Loader():
     def load(self):
         self.api.addToolsMenuSeparator()
         #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog(), lambda dialog: dialog.exec_())
-
         self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog())
