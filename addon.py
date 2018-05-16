@@ -7,6 +7,7 @@ from .sync import Syncer
 
 class Loader():
     tag = 'aokana'
+    ignoreTag = 'aokana_ignore'
 
     def __init__(self, api):
         self.api = api
@@ -38,7 +39,7 @@ class Loader():
             aqt.utils.showInfo('Invalid entries file (%s)' % file, dialog)
             return None
 
-        query = 'deck:%s' % deck
+        query = 'deck:%s -tag:%s' % (deck, self.ignoreTag)
 
         if onlyUntagged:
             query += ' -tag:%s' % self.tag
@@ -226,5 +227,5 @@ class Loader():
 
     def load(self):
         self.api.addToolsMenuSeparator()
-        self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
+        #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
         self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog())
