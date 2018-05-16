@@ -22,3 +22,6 @@ class Anki():
 
     def saveCollection(self):
         return self.window.col.save()
+
+    def getConfig(self):
+        return self.window.addonManager.getConfig(__name__)

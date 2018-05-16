@@ -11,6 +11,7 @@ class Loader():
         self.api = api
         self.reader = Reader()
         self.syncer = Syncer(self.api.saveMedia, self.printResult)
+        self.config = api.getConfig()
 
     def printResult(self, note, message):
         notification = 'expression: %s: message: %s' % (note['expression'], message)
@@ -105,7 +106,7 @@ class Loader():
         dialog, layout = self.createFormDialog(self.api.window)
 
         workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker,
-            defaultText = 'D:/Code/Bgi_tools/itsusora')
+            defaultText = self.config['defaultWorkingDirectory'])
         layout.addRow('Working directory', workingDirectoryBox)
 
         parseButton = self.api.qt.QPushButton('Parse', dialog)
@@ -223,15 +224,15 @@ class Loader():
 
         dialog, layout = self.createFormDialog(self.api.window)
 
-        deckBox, getDeck = self.createFormBox(dialog, defaultText = 'Vocabulary::Mining')
+        deckBox, getDeck = self.createFormBox(dialog, defaultText = self.config['defaultDeck'])
         layout.addRow('Deck', deckBox)
 
         entriesFileBox, getEntriesFile = self.createFormBox(dialog, entriesFilePicker,
-            defaultText = 'D:/Code/Bgi_tools/itsusora/entries.json')
+            defaultText = self.config['defaultEntriesFile'])
         layout.addRow('Entries file', entriesFileBox)
 
         audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker,
-            defaultText = 'D:/Media/VN Data/aokana/ogg')
+            defaultText = self.config['defaultAudioDirectory'])
         layout.addRow('Audio directory', audioDirectoryBox)
 
         extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
