@@ -131,6 +131,7 @@ class Loader():
             table.setHorizontalHeaderLabels(headers)
 
             for i, changeOperation in enumerate(changeOperations):
+                background = backgrounds['changed' if changeOperation.hasChanges() else 'unchanged']
                 fields = enumerate([
                     changeOperation.note.id,
                     changeOperation.note['expression'],
@@ -142,12 +143,17 @@ class Loader():
 
                 for j, field in fields:
                     item = self.api.qt.QTableWidgetItem(str(field))
+                    item.setBackground(background)
                     table.setItem(i, j, item)
             
             table.resizeColumnsToContents()
 
         table = self.api.qt.QTableWidget(parent)
         headers = ['Id', 'Expression', 'Old Audio', 'New Audio', 'Old Sentence', 'New Sentence']
+        backgrounds = {
+            'changed': self.api.qt.QColor('#f39c12'),
+            'unchanged': self.api.qt.QColor('white')
+        }
 
         return [table, updateTable]
 

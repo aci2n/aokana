@@ -6,6 +6,9 @@ class ChangeOperation():
         self.newSentence = note['sentence']
         self.newSentenceAudio = note['sentence_audio']
 
+    def hasChanges(self):
+        return self.note['sentence'] != self.newSentence or self.note['sentence_audio'] != self.newSentenceAudio
+
 class Syncer():
     def __init__(self, createMedia, notifyUpdate):
         self.createMedia = createMedia
