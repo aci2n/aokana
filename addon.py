@@ -21,7 +21,7 @@ class Loader():
     def resolveConflict(self, note, matches):
         return matches[0]
 
-    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, dialog):
+    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, extendedQuery, dialog):
         entries = None
 
         if not anki.utils.os.path.isdir(audioDirectory):
@@ -43,6 +43,9 @@ class Loader():
 
         if onlyUntagged:
             query += ' -tag:%s' % self.tag
+        
+        if extendedQuery != '':
+            query += ' ' + extendedQuery
 
         notes = map(self.api.getNoteById, self.api.getNotes(query))
         return self.syncer.sync(notes, entries, audioDirectory)
@@ -188,7 +191,7 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
-                changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged(), dialog)
+                changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged(), getExtendedQuery(), dialog)
 
                 if changeOperations != None:
                     setChangeOperations(changeOperations)
@@ -211,6 +214,9 @@ class Loader():
         onlyUntaggedCheckBox.setChecked(True)
         getOnlyUntagged = onlyUntaggedCheckBox.isChecked
         layout.addRow('Only untagged', onlyUntaggedCheckBox)
+
+        extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
+        layout.addRow('Extended query', extendedQueryBox)
 
         syncButton = self.api.qt.QPushButton('Sync', dialog)
         syncButton.clicked.connect(syncButtonClicked)
