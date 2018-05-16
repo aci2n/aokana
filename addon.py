@@ -123,7 +123,7 @@ class Loader():
         return True
 
     def createChangeOperationsTable(self, parent):
-        def updateTable(changeOperations):
+        def setChangeOperations(changeOperations):
             table.clear()
 
             table.setColumnCount(len(headers))
@@ -155,12 +155,20 @@ class Loader():
             'unchanged': self.api.qt.QColor('white')
         }
 
-        return table, updateTable
+        return table, setChangeOperations
 
     def createConfirmChangeOperationsDialog(self, parent):
+        def updateTable():
+            changeOperations = confirmHandler.changeOperations
+
+            if hideUnchangedCheckbox.isChecked():
+                changeOperations = list(filter(lambda operation: operation.hasChanges(), changeOperations))
+            
+            setTableChangeOperations(changeOperations)
+
         def setChangeOperations(changeOperations):
             confirmHandler.changeOperations = changeOperations
-            updateTable(changeOperations)
+            updateTable()
 
         def confirmHandler():
             changes = self.confirmChangeOperations(confirmHandler.changeOperations)
@@ -173,8 +181,12 @@ class Loader():
         layout = self.api.qt.QVBoxLayout(dialog)
         dialog.setLayout(layout)
 
-        changeOperationsTable, updateTable = self.createChangeOperationsTable(dialog)
+        changeOperationsTable, setTableChangeOperations = self.createChangeOperationsTable(dialog)
         layout.addWidget(changeOperationsTable)
+
+        hideUnchangedCheckbox = self.api.qt.QCheckBox('Hide unchanged', dialog)
+        hideUnchangedCheckbox.stateChanged.connect(updateTable)
+        layout.addWidget(hideUnchangedCheckbox)
 
         confirmButton = self.api.qt.QPushButton('Confirm', dialog)
         confirmButton.clicked.connect(confirmHandler)
