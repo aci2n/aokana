@@ -1,5 +1,3 @@
-import urllib.request
-import urllib.parse
 import anki.utils
 import aqt.utils
 from .poreader import Reader
