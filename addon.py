@@ -49,7 +49,6 @@ class Loader():
     def confirmChangeOperations(self, changeOperations):
         for changeOperation in changeOperations:
             note = changeOperation.note
-            note['sentence_old'] = note['sentence']
             note['sentence'] = changeOperation.newSentence
             note['sentence_audio'] = changeOperation.newSentenceAudio
             if not note.hasTag(self.tag): note.addTag(self.tag)
