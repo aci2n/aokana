@@ -7,8 +7,7 @@ class ChangeOperation():
         self.newSentenceAudio = note['sentence_audio']
 
 class Syncer():
-    def __init__(self, resolveConflict, createMedia, notifyUpdate):
-        self.resolveConflict = resolveConflict
+    def __init__(self, createMedia, notifyUpdate):
         self.createMedia = createMedia
         self.notifyUpdate = notifyUpdate
 
@@ -46,7 +45,7 @@ class Syncer():
             
         return [newSentence, '[sound:%s]' % audioFile]
 
-    def sync(self, notes, entries, audioDirectory):
+    def sync(self, notes, entries, audioDirectory, resolveConflict):
         changeOperations = []
 
         for note in notes:
@@ -70,7 +69,7 @@ class Syncer():
             if count == 1:
                 match = matches[0]
             else:
-                match = self.resolveConflict(note, matches)
+                match = resolveConflict(note, matches)
 
                 if match == None:
                     notify('skipped while resolving conflict')

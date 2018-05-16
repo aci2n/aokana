@@ -12,16 +12,16 @@ class Loader():
     def __init__(self, api):
         self.api = api
         self.reader = Reader()
-        self.syncer = Syncer(self.resolveConflict, self.api.saveMedia, self.printResult)
+        self.syncer = Syncer(self.api.saveMedia, self.printResult)
 
     def printResult(self, note, message):
         notification = 'expression: %s: message: %s' % (note['expression'], message)
         print(notification)
 
-    def resolveConflict(self, note, matches):
+    def automaticConflictResolver(self, note, matches):
         return matches[0]
 
-    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, extendedQuery, dialog):
+    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, extendedQuery, resolveConflict, dialog):
         entries = None
 
         if not anki.utils.os.path.isdir(audioDirectory):
@@ -48,7 +48,8 @@ class Loader():
             query += ' ' + extendedQuery
 
         notes = map(self.api.getNoteById, self.api.getNotes(query))
-        return self.syncer.sync(notes, entries, audioDirectory)
+
+        return self.syncer.sync(notes, entries, audioDirectory, resolveConflict)
 
     def confirmChangeOperations(self, changeOperations):
         for changeOperation in changeOperations:
@@ -178,6 +179,9 @@ class Loader():
 
         return [dialog, setChangeOperations]
 
+    def getManualConflictResolver(self, parent):
+        return self.automaticConflictResolver
+
     def createSyncDialog(self):
         def entriesFilePicker():
             file, _ = self.api.qt.QFileDialog.getOpenFileName(dialog, 'Select the entries file...')
@@ -191,7 +195,9 @@ class Loader():
             audioDirectory = getAudioDirectory()
             deck = getDeck()
             if file != '' and audioDirectory != '' and deck != '':
-                changeOperations = self.getChangeOperations(file, audioDirectory, deck, getOnlyUntagged(), getExtendedQuery(), dialog)
+                resolveConflict = manualConflictResolver if getResolveManually() else self.automaticConflictResolver
+                changeOperations = self.getChangeOperations(
+                    file, audioDirectory, deck, getOnlyUntagged(), getExtendedQuery(), resolveConflict, dialog)
 
                 if changeOperations != None:
                     setChangeOperations(changeOperations)
@@ -218,11 +224,17 @@ class Loader():
         extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
         layout.addRow('Extended query', extendedQueryBox)
 
+        resolveManuallyCheckbox = self.api.qt.QCheckBox(dialog)
+        getResolveManually = resolveManuallyCheckbox.isChecked
+        layout.addRow('Resolve manually', resolveManuallyCheckbox)
+
         syncButton = self.api.qt.QPushButton('Sync', dialog)
         syncButton.clicked.connect(syncButtonClicked)
         layout.addRow(syncButton)
 
         confirmChangeOperationsDialog, setChangeOperations = self.createConfirmChangeOperationsDialog(dialog)
+
+        manualConflictResolver = self.getManualConflictResolver(dialog)
 
         return dialog
 
