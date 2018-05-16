@@ -1,6 +1,5 @@
 import anki.utils
 import aqt.utils
-from .poreader import Reader
 from .sync import Syncer
 
 class Loader():
@@ -9,7 +8,6 @@ class Loader():
 
     def __init__(self, api):
         self.api = api
-        self.reader = Reader()
         self.syncer = Syncer(self.api.saveMedia, self.printResult)
         self.config = api.getConfig()
 
@@ -82,38 +80,6 @@ class Loader():
         dialog.setLayout(layout)
 
         return dialog, layout
-
-    def writeEntriesFile(self, directory, dialog):
-        entries = self.reader.read(directory)
-        file = anki.utils.os.path.join(directory, 'entries.json')
-
-        try:
-            with open(file, 'w') as out: 
-                anki.utils.json.dump(entries, out)
-                aqt.utils.showInfo('Saved %d entries to: %s' % (len(entries), file), dialog)
-        except Exception as e:
-            aqt.utils.showInfo('Error saving entries to %s' % file, e, dialog)
-
-    def createParseDialog(self):
-        def workingDirectoryPicker():
-            return self.api.qt.QFileDialog.getExistingDirectory(dialog, 'Select the working directory...')
-
-        def parseButtonClicked():
-            directory = getWorkingDirectory()
-            if directory != '':
-                self.writeEntriesFile(directory, dialog)
-
-        dialog, layout = self.createFormDialog(self.api.window)
-
-        workingDirectoryBox, getWorkingDirectory, _ = self.createFormBox(dialog, workingDirectoryPicker,
-            defaultText = self.config['defaultWorkingDirectory'])
-        layout.addRow('Working directory', workingDirectoryBox)
-
-        parseButton = self.api.qt.QPushButton('Parse', dialog)
-        parseButton.clicked.connect(parseButtonClicked)
-        layout.addRow(parseButton)
-
-        return dialog.exec_
 
     def validateEntries(self, entries):
         for key, value in entries.items():
@@ -298,5 +264,4 @@ class Loader():
 
     def load(self):
         self.api.addToolsMenuSeparator()
-        #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
         self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog(), "Ctrl+k")
