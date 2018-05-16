@@ -25,3 +25,6 @@ class Anki():
 
     def getConfig(self):
         return self.window.addonManager.getConfig(__name__)
+
+    def getCurrentReviewerCard(self):
+        return self.window.reviewer.card

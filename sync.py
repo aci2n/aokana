@@ -46,7 +46,7 @@ class Syncer():
         if audioFile == None:
             return None
             
-        return [newSentence, '[sound:%s]' % audioFile]
+        return newSentence, '[sound:%s]' % audioFile
 
     def sync(self, notes, entries, audioDirectory, resolveConflict):
         changeOperations = []

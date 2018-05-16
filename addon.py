@@ -72,7 +72,7 @@ class Loader():
             button.clicked.connect(lambda: lineEdit.setText(pickerHandler()))
             layout.addWidget(button)
 
-        return [layout, lineEdit.text]
+        return layout, lineEdit.text
 
     def createFormDialog(self, parent):
         dialog = self.api.qt.QDialog(parent)
@@ -81,7 +81,7 @@ class Loader():
         layout.setFieldGrowthPolicy(self.api.qt.QFormLayout.ExpandingFieldsGrow)
         dialog.setLayout(layout)
 
-        return [dialog, layout]
+        return dialog, layout
 
     def writeEntriesFile(self, directory, dialog):
         entries = self.reader.read(directory)
@@ -113,7 +113,7 @@ class Loader():
         parseButton.clicked.connect(parseButtonClicked)
         layout.addRow(parseButton)
 
-        return dialog
+        return dialog.exec_
 
     def validateEntries(self, entries):
         for key, value in entries.items():
@@ -155,7 +155,7 @@ class Loader():
             'unchanged': self.api.qt.QColor('white')
         }
 
-        return [table, updateTable]
+        return table, updateTable
 
     def createConfirmChangeOperationsDialog(self, parent):
         def setChangeOperations(changeOperations):
@@ -182,7 +182,7 @@ class Loader():
 
         setChangeOperations([])
 
-        return [dialog, setChangeOperations]
+        return dialog, setChangeOperations
 
     def getManualConflictResolver(self, parent):
         def getComboBoxItems(matches):
@@ -228,6 +228,9 @@ class Loader():
                     setChangeOperations(changeOperations)
                     confirmChangeOperationsDialog.showMaximized()
 
+        def openDialog():
+            dialog.exec_()
+
         dialog, layout = self.createFormDialog(self.api.window)
 
         deckBox, getDeck = self.createFormBox(dialog, defaultText = self.config['defaultDeck'])
@@ -261,14 +264,15 @@ class Loader():
 
         manualConflictResolver = self.getManualConflictResolver(dialog)
 
-        return dialog
+        return openDialog
 
-    def addActionWithDialog(self, title, dialog):
+    def addActionWithDialog(self, title, opener):
         action = self.api.qt.QAction(title, self.api.window)
-        action.triggered.connect(lambda: dialog.exec_())
+        action.triggered.connect(opener)
         self.api.addToolsMenuAction(action)
 
     def load(self):
         self.api.addToolsMenuSeparator()
-        #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
+        #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog(), lambda dialog: dialog.exec_())
+
         self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog())
