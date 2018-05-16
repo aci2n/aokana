@@ -14,7 +14,7 @@ class Loader():
         self.syncer = Syncer(self.resolveConflict, self.api.saveMedia, self.printResult)
 
     def printResult(self, note, message):
-        notification = 'expression: %s: sentence: %s, message: %s' % (note['expression'], note['sentence'], message)
+        notification = 'expression: %s: message: %s' % (note['expression'], message)
         print(notification)
 
     def resolveConflict(self, note, matches):

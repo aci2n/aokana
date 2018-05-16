@@ -60,7 +60,7 @@ class Syncer():
             changeOperation = ChangeOperation(note)
             changeOperations.append(changeOperation)
 
-            matches = self.findMatches(note['sentence'], note['expression'], entries)
+            matches = self.findMatches(note['original_sentence'], note['expression'], entries)
             count = len(matches)
 
             if count == 0:
