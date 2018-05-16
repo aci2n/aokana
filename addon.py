@@ -46,7 +46,7 @@ class Loader():
         notes = map(self.api.getNoteById, self.api.getNotes(query))
         return self.syncer.sync(notes, entries, audioDirectory)
 
-    def confirmChangeOperations(self, changeOperations, dialog):
+    def confirmChangeOperations(self, changeOperations):
         for changeOperation in changeOperations:
             note = changeOperation.note
             note['sentence'] = changeOperation.newSentence
@@ -55,7 +55,7 @@ class Loader():
             note.flush()
 
         self.api.saveCollection()
-        aqt.utils.showInfo('Updated %d notes!' % len(changeOperations), dialog)
+        return len(changeOperations)
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
@@ -102,7 +102,7 @@ class Loader():
         dialog, layout = self.createFormDialog(self.api.window)
 
         workingDirectoryBox, getWorkingDirectory = self.createFormBox(dialog, workingDirectoryPicker,
-            defaultText = '/Users/alvaro.calace/Documents/aokana/itsusora')
+            defaultText = 'D:/Code/Bgi_tools/itsusora')
         layout.addRow('Working directory', workingDirectoryBox)
 
         parseButton = self.api.qt.QPushButton('Parse', dialog)
@@ -153,7 +153,8 @@ class Loader():
             updateTable(changeOperations)
 
         def confirmHandler():
-            self.confirmChangeOperations(confirmHandler.changeOperations, dialog)
+            changes = self.confirmChangeOperations(confirmHandler.changeOperations)
+            aqt.utils.showInfo('Updated %d notes!' % changes, dialog)
             setChangeOperations([])
             dialog.close()
 
@@ -198,11 +199,11 @@ class Loader():
         layout.addRow('Deck', deckBox)
 
         entriesFileBox, getEntriesFile = self.createFormBox(dialog, entriesFilePicker,
-            defaultText = '/Users/alvaro.calace/Documents/aokana/itsusora/entries.json')
+            defaultText = 'D:/Code/Bgi_tools/itsusora/entries.json')
         layout.addRow('Entries file', entriesFileBox)
 
         audioDirectoryBox, getAudioDirectory = self.createFormBox(dialog, audioDirectoryPicker,
-            defaultText = '/Users/alvaro.calace/Documents/aokana/ogg')
+            defaultText = 'D:/Media/VN Data/aokana/ogg')
         layout.addRow('Audio directory', audioDirectoryBox)
 
         onlyUntaggedCheckBox = self.api.qt.QCheckBox(dialog)

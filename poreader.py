@@ -1,4 +1,4 @@
-import polib
+from .polib import pofile
 import glob
 import sys
 
@@ -9,7 +9,7 @@ class Reader():
 
         for file in glob.glob(exp):
             print('reading %s' % file)
-            entries = polib.pofile(file)
+            entries = pofile(file)
 
             if entries != None:
                 print('found %d entries in %s' % (len(entries), file))
