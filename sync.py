@@ -56,7 +56,7 @@ class Syncer():
                 self.notifyUpdate(note, message)
 
             if note == None:
-                notify('invalid note id: %d' % id)
+                notify('invalid note')
                 continue
 
             changeOperation = ChangeOperation(note)

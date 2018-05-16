@@ -230,7 +230,7 @@ class Loader():
 
         def openDialog():
             note = self.api.getCurrentReviewerNote()
-            
+
             if note != None:
                 setExtendedQuery('nid:%d' % note.id)
                 skipTaggedCheckbox.setChecked(False)
@@ -283,5 +283,5 @@ class Loader():
 
     def load(self):
         self.api.addToolsMenuSeparator()
-        #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog(), lambda dialog: dialog.exec_())
+        #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
         self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog())
