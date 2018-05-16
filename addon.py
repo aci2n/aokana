@@ -273,15 +273,18 @@ class Loader():
         confirmChangeOperationsDialog, setChangeOperations = self.createConfirmChangeOperationsDialog(dialog)
 
         manualConflictResolver = self.getManualConflictResolver(dialog)
-
+        
         return openDialog
 
-    def addActionWithDialog(self, title, opener):
+    def addActionWithDialog(self, title, opener, shortcut = None):
         action = self.api.qt.QAction(title, self.api.window)
         action.triggered.connect(opener)
         self.api.addToolsMenuAction(action)
 
+        if shortcut != None:
+            action.setShortcut(shortcut)
+
     def load(self):
         self.api.addToolsMenuSeparator()
         #self.addActionWithDialog('Parse 蒼彼方', self.createParseDialog())
-        self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog())
+        self.addActionWithDialog('Sync 蒼彼方', self.createSyncDialog(), "Ctrl+k")
