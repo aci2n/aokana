@@ -12,19 +12,19 @@ class Syncer():
         self.createMedia = createMedia
         self.notifyUpdate = notifyUpdate
 
-    def findMatches(self, expression, sentence, entries):
-        matches = []
+    def findMatches(self, sentence, expression, entries):
+        sentenceMatches = []
         expressionMatches = []
 
         for audioKey, text in entries.items():
             key = audioKey.lower()
 
-            if sentence in text:
-                matches.append([key, text])
+            if sentence != '' and sentence in text:
+                sentenceMatches.append([key, text])
             if expression in text:
                 expressionMatches.append([key, text])
 
-        return matches + expressionMatches
+        return sentenceMatches + expressionMatches
 
     def copyAudioFile(self, directory, key):
         target = key + '.ogg'
@@ -60,11 +60,7 @@ class Syncer():
             changeOperation = ChangeOperation(note)
             changeOperations.append(changeOperation)
 
-            if note['sentence'] == '':
-                notify('does not have a sentence')
-                continue
-            
-            matches = self.findMatches(note['expression'], note['sentence'], entries)
+            matches = self.findMatches(note['sentence'], note['expression'], entries)
             count = len(matches)
 
             if count == 0:
