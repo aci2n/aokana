@@ -180,7 +180,27 @@ class Loader():
         return [dialog, setChangeOperations]
 
     def getManualConflictResolver(self, parent):
-        return self.automaticConflictResolver
+        def getComboBoxItems(matches):
+            items = []
+
+            for i, match in enumerate(matches):
+                items.append('%d: [%s] - %s' % (i, match[0], match[1]))
+
+            return items
+
+        def resolveConflict(note, matches):
+            items = getComboBoxItems(matches)
+
+            choice, success = self.api.qt.QInputDialog.getItem(parent, 'Resolve conflict for "%s"' % note['expression'],
+                'Matches', items, editable = False)
+
+            if success:
+                index = int(choice.split(':', 1)[0])
+                return matches[index]
+            else:
+                return self.automaticConflictResolver(note, matches)
+
+        return resolveConflict
 
     def createSyncDialog(self):
         def entriesFilePicker():
@@ -216,13 +236,13 @@ class Loader():
             defaultText = 'D:/Media/VN Data/aokana/ogg')
         layout.addRow('Audio directory', audioDirectoryBox)
 
+        extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
+        layout.addRow('Extended query', extendedQueryBox)
+
         onlyUntaggedCheckBox = self.api.qt.QCheckBox(dialog)
         onlyUntaggedCheckBox.setChecked(True)
         getOnlyUntagged = onlyUntaggedCheckBox.isChecked
         layout.addRow('Only untagged', onlyUntaggedCheckBox)
-
-        extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
-        layout.addRow('Extended query', extendedQueryBox)
 
         resolveManuallyCheckbox = self.api.qt.QCheckBox(dialog)
         getResolveManually = resolveManuallyCheckbox.isChecked
