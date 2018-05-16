@@ -19,7 +19,7 @@ class Loader():
     def automaticConflictResolver(self, note, matches):
         return matches[0]
 
-    def getChangeOperations(self, file, audioDirectory, deck, onlyUntagged, extendedQuery, resolveConflict, dialog):
+    def getChangeOperations(self, file, audioDirectory, deck, skipTagged, extendedQuery, resolveConflict, dialog):
         entries = None
 
         if not anki.utils.os.path.isdir(audioDirectory):
@@ -39,7 +39,7 @@ class Loader():
 
         query = 'deck:%s -tag:%s' % (deck, self.ignoreTag)
 
-        if onlyUntagged:
+        if skipTagged:
             query += ' -tag:%s' % self.tag
         
         if extendedQuery != '':
@@ -215,7 +215,7 @@ class Loader():
             if file != '' and audioDirectory != '' and deck != '':
                 resolveConflict = manualConflictResolver if getResolveManually() else self.automaticConflictResolver
                 changeOperations = self.getChangeOperations(
-                    file, audioDirectory, deck, getOnlyUntagged(), getExtendedQuery(), resolveConflict, dialog)
+                    file, audioDirectory, deck, getSkipTagged(), getExtendedQuery(), resolveConflict, dialog)
 
                 if changeOperations != None:
                     setChangeOperations(changeOperations)
@@ -237,10 +237,10 @@ class Loader():
         extendedQueryBox, getExtendedQuery = self.createFormBox(dialog)
         layout.addRow('Extended query', extendedQueryBox)
 
-        onlyUntaggedCheckBox = self.api.qt.QCheckBox(dialog)
-        onlyUntaggedCheckBox.setChecked(True)
-        getOnlyUntagged = onlyUntaggedCheckBox.isChecked
-        layout.addRow('Only untagged', onlyUntaggedCheckBox)
+        skipTaggedCheckbox = self.api.qt.QCheckBox(dialog)
+        skipTaggedCheckbox.setChecked(True)
+        getSkipTagged = skipTaggedCheckbox.isChecked
+        layout.addRow('Skip tagged', skipTaggedCheckbox)
 
         resolveManuallyCheckbox = self.api.qt.QCheckBox(dialog)
         getResolveManually = resolveManuallyCheckbox.isChecked
