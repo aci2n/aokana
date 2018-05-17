@@ -165,6 +165,11 @@ class Loader():
             setChangeOperations([])
             dialog.close()
 
+        def openDialog(changeOperations):
+            setChangeOperations(changeOperations)
+            dialog.showMaximized()
+            confirmButton.setFocus()
+            
         dialog = self.api.qt.QDialog(parent)
         
         layout = self.api.qt.QVBoxLayout(dialog)
@@ -183,7 +188,7 @@ class Loader():
 
         setChangeOperations([])
 
-        return dialog, setChangeOperations
+        return openDialog
 
     def getManualConflictResolver(self, parent):
         def getComboBoxItems(matches):
@@ -226,8 +231,7 @@ class Loader():
                     file, audioDirectory, deck, getSkipTagged(), getExtendedQuery(), resolveConflict, dialog)
 
                 if changeOperations != None:
-                    setChangeOperations(changeOperations)
-                    confirmChangeOperationsDialog.showMaximized()
+                    openConfirmDialog(changeOperations)
                     dialog.close()
 
         def openDialog():
@@ -276,7 +280,7 @@ class Loader():
         syncButton.clicked.connect(syncButtonClicked)
         layout.addRow(syncButton)
 
-        confirmChangeOperationsDialog, setChangeOperations = self.createConfirmChangeOperationsDialog(dialog)
+        openConfirmDialog = self.createConfirmChangeOperationsDialog(dialog)
 
         manualConflictResolver = self.getManualConflictResolver(dialog)
         
