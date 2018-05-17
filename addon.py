@@ -223,6 +223,10 @@ class Loader():
                 setExtendedQuery('nid:%d' % note.id)
                 skipTaggedCheckbox.setChecked(False)
                 resolveManuallyCheckbox.setChecked(True)
+
+                if self.config['quickMode']:
+                    syncButtonClicked()
+                    return
             else:
                 setExtendedQuery('')
                 skipTaggedCheckbox.setChecked(True)
