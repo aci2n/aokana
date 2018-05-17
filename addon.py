@@ -62,7 +62,7 @@ class Loader():
                 note['sentence_audio'] = changeOperation.newSentenceAudio
                 changed = True
 
-            if not note.hasTag(self.tag):
+            if self.isUntagged(note):
                 note.addTag(self.tag)
                 changed = True
 
@@ -112,6 +112,16 @@ class Loader():
         return validated
 
     def createChangeOperationsTable(self, parent):
+        def getBackground(changeOperation):
+            key = 'unchanged'
+
+            if changeOperation.hasChanges():
+                key = 'changed'
+            elif self.isUntagged(changeOperation.note):
+                key = 'tag'
+
+            return backgrounds[key]
+            
         def setChangeOperations(changeOperations):
             table.clear()
 
@@ -120,7 +130,7 @@ class Loader():
             table.setHorizontalHeaderLabels(headers)
 
             for i, changeOperation in enumerate(changeOperations):
-                background = backgrounds['changed' if changeOperation.hasChanges() else 'unchanged']
+                background = getBackground(changeOperation)
                 fields = enumerate([
                     changeOperation.note.id,
                     changeOperation.note['expression'],
@@ -141,17 +151,24 @@ class Loader():
         headers = ['Id', 'Expression', 'Old Audio', 'New Audio', 'Old Sentence', 'New Sentence']
         backgrounds = {
             'changed': self.api.qt.QColor('#f39c12'),
-            'unchanged': self.api.qt.QColor('white')
+            'unchanged': self.api.qt.QColor('#ffffff'),
+            'tag': self.api.qt.QColor('#55efc4')
         }
 
         return table, setChangeOperations
 
+    def isUntagged(self, note):
+        return not note.hasTag(self.tag)
+
     def createConfirmChangeOperationsDialog(self, parent):
+        def hasChanges(changeOperation):
+             return changeOperation.hasChanges() or self.isUntagged(changeOperation.note)
+
         def updateTable():
             changeOperations = confirmHandler.changeOperations
 
             if hideUnchangedCheckbox.isChecked():
-                changeOperations = list(filter(lambda operation: operation.hasChanges(), changeOperations))
+                changeOperations = list(filter(hasChanges, changeOperations))
             
             setTableChangeOperations(changeOperations)
 
