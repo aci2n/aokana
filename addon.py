@@ -143,6 +143,7 @@ class Loader():
                 for j, field in fields:
                     item = self.api.qt.QTableWidgetItem(str(field))
                     item.setBackground(background)
+                    item.setFlags(item.flags() & ~self.api.qt.Qt.ItemIsEditable)
                     table.setItem(i, j, item)
             
             table.resizeColumnsToContents()
