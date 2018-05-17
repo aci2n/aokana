@@ -51,15 +51,29 @@ class Loader():
         return self.syncer.sync(notes, entries, audioDirectory, resolveConflict)
 
     def confirmChangeOperations(self, changeOperations):
+        changes = 0
+
         for changeOperation in changeOperations:
             note = changeOperation.note
-            note['sentence'] = changeOperation.newSentence
-            note['sentence_audio'] = changeOperation.newSentenceAudio
-            if not note.hasTag(self.tag): note.addTag(self.tag)
-            note.flush()
+            changed = False
 
-        self.api.saveCollection()
-        return len(changeOperations)
+            if changeOperation.hasChanges():
+                note['sentence'] = changeOperation.newSentence
+                note['sentence_audio'] = changeOperation.newSentenceAudio
+                changed = True
+
+            if not note.hasTag(self.tag):
+                note.addTag(self.tag)
+                changed = True
+
+            if changed:
+                note.flush()
+                changes += 1
+
+        if changes > 0:
+            self.api.saveCollection()
+
+        return changes
 
     def createFormBox(self, parent, pickerHandler = None, buttonText = 'Select', defaultText = ''):
         layout = self.api.qt.QHBoxLayout()
@@ -147,7 +161,7 @@ class Loader():
 
         def confirmHandler():
             changes = self.confirmChangeOperations(confirmHandler.changeOperations)
-            aqt.utils.showInfo('Updated %d notes!' % changes, dialog)
+            aqt.utils.showInfo('Processed %d note(s) with %d update(s).' % (len(confirmHandler.changeOperations), changes), dialog)
             setChangeOperations([])
             dialog.close()
 
