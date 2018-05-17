@@ -190,7 +190,7 @@ class Loader():
                 index = int(choice.split(':', 1)[0])
                 return matches[index]
             else:
-                return self.automaticConflictResolver(note, matches)
+                return None
 
         return resolveConflict
 
@@ -214,6 +214,7 @@ class Loader():
                 if changeOperations != None:
                     setChangeOperations(changeOperations)
                     confirmChangeOperationsDialog.showMaximized()
+                    dialog.close()
 
         def openDialog():
             note = self.api.getCurrentReviewerNote()
