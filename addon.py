@@ -32,7 +32,9 @@ class Loader():
             aqt.utils.showInfo('Error parsing entries file (%s)' % file, dialog)
             return None
 
-        if not self.validateEntries(entries):
+        entries = self.validateEntries(entries)
+
+        if entries == None:
             aqt.utils.showInfo('Invalid entries file (%s)' % file, dialog)
             return None
 
@@ -81,12 +83,19 @@ class Loader():
 
         return dialog, layout
 
-    def validateEntries(self, entries):
-        for key, value in entries.items():
-            if not isinstance(key, str) or not isinstance(value, str):
-                return False
+    def escapeText(self, text):
+        return text.replace('\\n', '')
 
-        return True
+    def validateEntries(self, entries):
+        validated = {}
+
+        for audioKey, text in entries.items():
+            if isinstance(audioKey, str) and isinstance(text, str):
+                validated[audioKey] = self.escapeText(text)
+            else:
+                return None
+
+        return validated
 
     def createChangeOperationsTable(self, parent):
         def setChangeOperations(changeOperations):
