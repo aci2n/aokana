@@ -1,4 +1,4 @@
 from .api import Anki
-from .addon import Loader
+from .aokana import Aokana
 
-Loader(Anki()).load()
+Aokana(Anki()).load()

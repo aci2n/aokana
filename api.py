@@ -1,9 +1,7 @@
-from aqt import mw, qt
-
 class Anki():
     def __init__(self):
+        from aqt import mw
         self.window = mw
-        self.qt = qt
 
     def addToolsMenuAction(self, action):
         return self.window.form.menuTools.addAction(action)
@@ -12,7 +10,7 @@ class Anki():
         return self.window.form.menuTools.addSeparator()
     
     def getNotes(self, query):
-        return self.window.col.findNotes(query)
+        return map(self.getNoteById, self.window.col.findNotes(query))
 
     def getNoteById(self, id):
         return self.window.col.getNote(id)
@@ -40,3 +38,6 @@ class Anki():
             if card != None: note = card.note()
 
         return note
+    
+    def isNoteOfType(self, note, modelName):
+        return note.model()['name'] == modelName
