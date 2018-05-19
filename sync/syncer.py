@@ -1,6 +1,7 @@
 from anki.utils import os
 
 from .changeop import ChangeOperation
+from ..arguments.entriesloader import Entry
 
 class Syncer():
     def __init__(self, notifyUpdate, createMedia):
@@ -19,8 +20,11 @@ class Syncer():
 
         return sentenceMatches + expressionMatches
 
-    def copyAudioFile(self, key, audioDirectory):
-        target = key + '.ogg'
+    def copyAudioFile(self, audioKey, audioDirectory):
+        if audioKey == '':
+            return None
+
+        target = audioKey + '.ogg'
         file = os.path.join(audioDirectory, target)
 
         try:
@@ -30,13 +34,14 @@ class Syncer():
             print('error creating media file', e)
             return None
 
-    def updateNote(self, note, match, audioDirectory):
-        audioFile = self.copyAudioFile(match.key, audioDirectory)
+    def getSentenceAudio(self, audioKey, audioDirectory):
+        sentenceAudio = ''
+        audioFile = self.copyAudioFile(audioKey, audioDirectory)
 
-        if audioFile == None:
-            return None
-            
-        return UpdateResult(audioFile, match.text)
+        if audioFile != None:
+            sentenceAudio = '[sound:%s]' % audioFile
+
+        return sentenceAudio
 
     def sync(self, args):
         changeOperations = []
@@ -60,28 +65,15 @@ class Syncer():
                 notify('had no matches')
                 continue
 
-            if count == 1:
-                match = matches[0]
-            else:
-                match = args.conflictResolver.resolve(note, matches)
+            matches.append(Entry('', note['original_sentence']))
+            match = args.conflictResolver.resolve(note, matches)
 
-                if match == None:
-                    notify('skipped while resolving conflict')
-                    continue
-
-            updateResult = self.updateNote(note, match, args.audioDirectory)
-
-            if updateResult == None:
-                notify('error creating audio file for %s' % match.key)
+            if match == None:
+                notify('skipped while resolving conflict')
                 continue
 
-            changeOperation.newSentence = updateResult.sentence
-            changeOperation.newSentenceAudio = updateResult.sentenceAudio
-            notify('match found, audio: %s - sentence: %s' % (updateResult.sentenceAudio, updateResult.sentence))
+            changeOperation.newSentence = match.text
+            changeOperation.newSentenceAudio = self.getSentenceAudio(match.key, args.audioDirectory)
+            notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
         
         return changeOperations
-            
-class UpdateResult():
-    def __init__(self, audioFile, sentence):
-        self.sentenceAudio = '[sound:%s]' % audioFile
-        self.sentence = sentence
