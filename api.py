@@ -15,8 +15,8 @@ class Anki():
     def getNoteById(self, id):
         return self.window.col.getNote(id)
 
-    def saveMedia(self, path, data):
-        return self.window.col.media.writeData(path, data)
+    def saveMedia(self, path):
+        return self.window.col.media.addFile(path)
 
     def saveCollection(self):
         return self.window.col.save()

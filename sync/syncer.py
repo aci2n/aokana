@@ -24,12 +24,8 @@ class Syncer():
         if audioKey == '':
             return None
 
-        target = audioKey + '.ogg'
-        file = os.path.join(audioDirectory, target)
-
         try:
-            with open(file, 'rb') as handle:
-                return self.createMedia(target, handle.read())
+            return self.createMedia(os.path.join(audioDirectory, audioKey + '.ogg'))
         except Exception as e:
             print('error creating media file', e)
             return None
