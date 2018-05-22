@@ -41,12 +41,11 @@ class Syncer():
 
     def sync(self, args):
         changeOperations = []
-        note = None
 
-        def notify(message):
-            self.notifyUpdate(note, message)
+        for index, note in enumerate(args.notes):
+            def notify(message):
+                self.notifyUpdate(note, message, index)
 
-        for note in args.notes:
             if note == None:
                 notify('invalid note')
                 continue

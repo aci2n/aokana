@@ -10,7 +10,7 @@ class Anki():
         return self.window.form.menuTools.addSeparator()
     
     def getNotes(self, query):
-        return map(self.getNoteById, self.window.col.findNotes(query))
+        return list(map(self.getNoteById, self.window.col.findNotes(query)))
 
     def getNoteById(self, id):
         return self.window.col.getNote(id)
@@ -41,3 +41,6 @@ class Anki():
     
     def isNoteOfType(self, note, modelName):
         return note.model()['name'] == modelName
+
+    def getProgress(self):
+        return self.window.progress

@@ -14,8 +14,9 @@ class Aokana():
         self.config = api.getConfig()
         self.syncDialog = self.getSyncDialog()
         self.syncArgumentsFetcher = SyncArgumentsFetcher(self.config, self.api.getNotes, self.syncDialog)
-        self.syncer = Syncer(self.printResult, self.api.saveMedia)
+        self.syncer = Syncer(self.onSyncUpdate, self.api.saveMedia)
         self.changeConfirmer = ChangeConfirmer(self.api.saveCollection)
+        self.progress = self.api.getProgress()
 
     def load(self):
         self.api.addToolsMenuSeparator()
@@ -34,9 +35,8 @@ class Aokana():
 
         return dialog
 
-    def printResult(self, note, message):
-        notification = 'expression: %s: message: %s' % (note['expression'], message)
-        print(notification)
+    def onSyncUpdate(self, note, message, index):
+        self.progress.update('Processed %s...' % note['expression'], index)
     
     def onSyncConfirmed(self, changeOperations, sourceDialog):
         changes = self.changeConfirmer.confirm(changeOperations)
@@ -49,7 +49,9 @@ class Aokana():
     def syncEntries(self, currentNote, extendedQuery, skipTagged, resolveManually):
         try:
             args = self.syncArgumentsFetcher.fetch(extendedQuery, skipTagged, resolveManually)
+            self.progress.start(len(args.notes), parent=self.syncDialog)
             changeOperations = self.syncer.sync(args)
+            self.progress.finish()
 
             if self.shouldStopBeforeConfirmation(currentNote, changeOperations):
                 showInfo('No changes available for %s' % currentNote['expression'], self.api.window)
