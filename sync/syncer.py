@@ -31,13 +31,12 @@ class Syncer():
             return None
 
     def getSentenceAudio(self, audioKey, audioDirectory):
-        sentenceAudio = ''
         audioFile = self.copyAudioFile(audioKey, audioDirectory)
 
         if audioFile != None:
-            sentenceAudio = '[sound:%s]' % audioFile
+            return '[sound:%s]' % audioFile
 
-        return sentenceAudio
+        return None
 
     def sync(self, args):
         changeOperations = []
@@ -67,8 +66,14 @@ class Syncer():
                 notify('skipped while resolving conflict')
                 continue
 
+            sentenceAudio = self.getSentenceAudio(match.key, args.audioDirectory)
+
+            if sentenceAudio == None:
+                notify('invalid audio key')
+                continue
+
             changeOperation.newSentence = match.text
-            changeOperation.newSentenceAudio = self.getSentenceAudio(match.key, args.audioDirectory)
+            changeOperation.newSentenceAudio = sentenceAudio
             notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
         
         return changeOperations

@@ -7,7 +7,7 @@ class EntriesLoader():
         self.entries = None
 
     def escapeText(self, text):
-        return text.replace('\\n', '')
+        return text.replace('\\n', '').replace('\n', '').replace('\u3000', ' ')
 
     def validateEntries(self, entries):
         validated = []
