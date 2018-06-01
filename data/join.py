@@ -1,16 +1,10 @@
 import json
 
-files = [
-    'aokana_entries.json',
-    'bokupia_entries.json'
-]
-
 result = {}
 
-for file in files:
+for file in['aokana_entries.json', 'bokupia_entries.json']:
     with open(file) as stream:
-        data = json.load(stream)
-        result.update(data)
+        result.update(json.load(stream))
 
 with open('entries.json', 'w') as stream:
     json.dump(result, stream)
