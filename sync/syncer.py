@@ -21,9 +21,6 @@ class Syncer():
         return sentenceMatches + expressionMatches
 
     def copyAudioFile(self, audioKey, audioDirectory):
-        if audioKey == '':
-            return None
-
         try:
             return self.createMedia(os.path.join(audioDirectory, audioKey))
         except Exception as e:
@@ -31,12 +28,15 @@ class Syncer():
             return None
 
     def getSentenceAudio(self, audioKey, audioDirectory):
-        audioFile = self.copyAudioFile(audioKey, audioDirectory)
+        audioFile = ''
 
-        if audioFile != None:
-            return '[sound:%s]' % audioFile
+        if audioKey != '':
+            audioFile = self.copyAudioFile(audioKey, audioDirectory)
 
-        return None
+            if audioFile != None:
+                audioFile = '[sound:%s]' % audioFile
+
+        return audioFile
 
     def sync(self, args):
         changeOperations = []
