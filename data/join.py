@@ -2,7 +2,7 @@ import json
 
 result = {}
 
-for file in['aokana_entries.json', 'bokupia_entries.json']:
+for file in ['aokana_entries.json', 'bokupia_entries.json', 'tsumihika_entries.json']:
     with open(file) as stream:
         result.update(json.load(stream))
 
