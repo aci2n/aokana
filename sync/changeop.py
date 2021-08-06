@@ -1,18 +1,21 @@
 AOKANA_TAG = 'aokana'
 AOKANA_IGNORE_TAG = 'aokana_ignore'
+AOKANA_SENTENCE_FIELD = 'aokana_sentence'
+AOKANA_SENTENCE_AUDIO_FIELD = 'aokana_sentence_audio'
 
 class ChangeOperation():
-    def __init__(self, note):
+    def __init__(self, note, noteMappings):
         self.note = note
-        self.newSentence = note['sentence']
-        self.newSentenceAudio = note['sentence_audio']
+        self.newSentence = note[AOKANA_SENTENCE_FIELD]
+        self.newSentenceAudio = note[AOKANA_SENTENCE_AUDIO_FIELD]
+        self.noteMappings = noteMappings
 
     def hasFieldChanges(self):
-        return self.note['sentence'] != self.newSentence or self.note['sentence_audio'] != self.newSentenceAudio
+        return self.note[AOKANA_SENTENCE_FIELD] != self.newSentence or self.note[AOKANA_SENTENCE_AUDIO_FIELD] != self.newSentenceAudio
         
     def applyFieldChanges(self):
-        self.note['sentence'] = self.newSentence
-        self.note['sentence_audio'] = self.newSentenceAudio
+        self.note[AOKANA_SENTENCE_FIELD] = self.newSentence
+        self.note[AOKANA_SENTENCE_AUDIO_FIELD] = self.newSentenceAudio
 
     def isUntagged(self):
         return not self.note.hasTag(AOKANA_TAG)

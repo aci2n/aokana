@@ -17,14 +17,18 @@ class SyncArgumentsFetcher():
         config = self.configValidator.validate()
         entries = self.entriesLoader.getEntries(config.entriesFile)
         conflictResolver = self.manualConflictResolver if resolveManually else self.automaticConflictResolver
-        query = self.queryBuilder.build(config.noteType, skipTagged, extendedQuery)
-        notes = self.getNotes(query)
+        notePacks = []
 
-        return SyncArguments(notes, entries, conflictResolver, config.audioDirectory)
+        for noteType, noteMappings in config.noteMappings.items():
+            query = self.queryBuilder.build(noteType, skipTagged, extendedQuery)
+            notes = self.getNotes(query)
+            notePacks.append({'notes': notes, 'mappings': noteMappings})
+
+        return SyncArguments(notePacks, entries, conflictResolver, config.audioDirectory)
 
 class SyncArguments():
-    def __init__(self, notes, entries, conflictResolver, audioDirectory):
-        self.notes = notes
+    def __init__(self, notePacks, entries, conflictResolver, audioDirectory):
+        self.notePacks = notePacks
         self.entries = entries
         self.conflictResolver = conflictResolver
         self.audioDirectory = audioDirectory

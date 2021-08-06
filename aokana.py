@@ -35,8 +35,8 @@ class Aokana():
 
         return dialog
 
-    def onSyncUpdate(self, note, message, index):
-        self.progress.update('Processed %s...' % note['expression'], index)
+    def onSyncUpdate(self, note, message, index, mappings):
+        self.progress.update('Processed %s...' % note[mappings['expressionField']], index)
     
     def onSyncConfirmed(self, changeOperations, sourceDialog):
         changes = self.changeConfirmer.confirm(changeOperations)
@@ -49,7 +49,7 @@ class Aokana():
     def syncEntries(self, currentNote, extendedQuery, skipTagged, resolveManually):
         try:
             args = self.syncArgumentsFetcher.fetch(extendedQuery, skipTagged, resolveManually)
-            self.progress.start(len(args.notes), parent=self.syncDialog)
+            self.progress.start(len(args.notePacks), parent=self.syncDialog)
             changeOperations = self.syncer.sync(args)
             self.progress.finish()
 

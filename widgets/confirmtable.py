@@ -7,7 +7,7 @@ class ConfirmTable(qt.QTableWidget):
         self.initUI()
 
     def initUI(self):
-        self.headers = ['Id', 'Expression', 'Old Audio', 'New Audio', 'Old Sentence', 'New Sentence']
+        self.headers = ['Id', 'Expression', 'Current Sentence', 'New Sentence', 'New Audio']
         self.backgrounds = {
             'changed': qt.QColor('#f39c12'),
             'unchanged': qt.QColor('#ffffff'),
@@ -35,11 +35,10 @@ class ConfirmTable(qt.QTableWidget):
             background = self.getBackground(changeOperation)
             fields = enumerate([
                 changeOperation.note.id,
-                changeOperation.note['expression'],
-                changeOperation.note['sentence_audio'],
-                changeOperation.newSentenceAudio,
-                changeOperation.note['sentence'],
-                changeOperation.newSentence
+                changeOperation.note[changeOperation.noteMappings['expressionField']],
+                changeOperation.note[changeOperation.noteMappings['sentenceField']],
+                changeOperation.newSentence,
+                changeOperation.newSentenceAudio
             ])
 
             for j, field in fields:

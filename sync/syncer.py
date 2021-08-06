@@ -41,39 +41,43 @@ class Syncer():
     def sync(self, args):
         changeOperations = []
 
-        for index, note in enumerate(args.notes):
-            def notify(message):
-                self.notifyUpdate(note, message, index)
+        for notePack in args.notePacks:
+            notes = notePack['notes']
+            mappings = notePack['mappings']
+            
+            for index, note in enumerate(notes):
+                def notify(message):
+                    self.notifyUpdate(note, message, index, mappings)
 
-            if note == None:
-                notify('invalid note')
-                continue
+                if note == None:
+                    notify('invalid note')
+                    continue
 
-            changeOperation = ChangeOperation(note)
-            changeOperations.append(changeOperation)
+                changeOperation = ChangeOperation(note, mappings)
+                changeOperations.append(changeOperation)
 
-            matches = self.findMatches(note['original_sentence'], note['expression'], args.entries)
-            count = len(matches)
+                matches = self.findMatches(note[mappings['sentenceField']], note[mappings['expressionField']], args.entries)
+                count = len(matches)
 
-            if count == 0:
-                notify('had no matches')
-                continue
+                if count == 0:
+                    notify('had no matches')
+                    continue
 
-            matches.append(Entry('', note['original_sentence']))
-            match = args.conflictResolver.resolve(note, matches)
+                matches.append(Entry('', note[mappings['sentenceField']]))
+                match = args.conflictResolver.resolve(note, matches)
 
-            if match == None:
-                notify('skipped while resolving conflict')
-                continue
+                if match == None:
+                    notify('skipped while resolving conflict')
+                    continue
 
-            sentenceAudio = self.getSentenceAudio(match.key, args.audioDirectory)
+                sentenceAudio = self.getSentenceAudio(match.key, args.audioDirectory)
 
-            if sentenceAudio == None:
-                notify('invalid audio key')
-                continue
+                if sentenceAudio == None:
+                    notify('invalid audio key')
+                    continue
 
-            changeOperation.newSentence = match.text
-            changeOperation.newSentenceAudio = sentenceAudio
-            notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
-        
+                changeOperation.newSentence = match.text
+                changeOperation.newSentenceAudio = sentenceAudio
+                notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
+            
         return changeOperations

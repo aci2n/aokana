@@ -9,9 +9,9 @@ class ConfigValidator():
     def validate(self):
         entriesFile = self.config['entriesFile']
         audioDirectory = self.config['audioDirectory']
-        noteType = self.config['noteType']
+        noteMappings = self.config['noteMappings']
 
-        if entriesFile == '' or audioDirectory == '' or noteType == '':
+        if entriesFile == '' or audioDirectory == '' or noteMappings == None:
             raise MissingConfigException()
 
         if not os.path.isdir(audioDirectory):
@@ -20,10 +20,10 @@ class ConfigValidator():
         if not os.path.exists(entriesFile):
             raise InexistentEntriesFileException(entriesFile)
 
-        return ValidatedConfig(entriesFile, audioDirectory, noteType)
+        return ValidatedConfig(entriesFile, audioDirectory, noteMappings)
 
 class ValidatedConfig():
-    def __init__(self, entriesFile, audioDirectory, noteType):
+    def __init__(self, entriesFile, audioDirectory, noteMappings):
         self.entriesFile = entriesFile
         self.audioDirectory = audioDirectory
-        self.noteType = noteType
+        self.noteMappings = noteMappings
