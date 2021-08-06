@@ -51,6 +51,7 @@ class Aokana():
         try:
             args = self.syncArgumentsFetcher.fetch(extendedQuery, skipTagged, resolveManually)
             self.progress.start(parent=self.syncDialog)
+            self.progress._showWin() # workaround for progress dialog showing after manual conflict resolver dialog
             changeOperations = self.syncer.sync(args, lambda: self.progress.want_cancel())
             self.progress.finish()
 
