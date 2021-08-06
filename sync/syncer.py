@@ -34,24 +34,28 @@ class Syncer():
             notes = notePack['notes']
             mappings = notePack['mappings']
             noteType = notePack['type']
+            expressionField = mappings['expressionField']
+            sentenceField = mappings['sentenceField']
             
             for note in notes:
-                index += 1
-
                 if cancel():
                     return changeOperations
 
+                index += 1
+                expression = note[expressionField]
+                sentence = note[sentenceField]
+
                 def notify(message):
-                    self.notifyUpdate(message, note[mappings['expressionField']], index, size)
+                    self.notifyUpdate(message, expression, index, size)
 
                 if note == None:
                     notify('invalid note')
                     continue
 
-                changeOperation = ChangeOperation(note, noteType, mappings, self.createMedia)
+                changeOperation = ChangeOperation(note, noteType, expression, self.createMedia)
                 changeOperations.append(changeOperation)
 
-                matches = self.findMatches(note[mappings['sentenceField']], note[mappings['expressionField']], args.entries)
+                matches = self.findMatches(sentence, expression, args.entries)
                 count = len(matches)
 
                 if count == 0:

@@ -37,7 +37,7 @@ class ConfirmTable(qt.QTableWidget):
             fields = enumerate([
                 changeOperation.note.id,
                 changeOperation.noteType,
-                changeOperation.note[changeOperation.noteMappings['expressionField']],
+                changeOperation.expression,
                 changeOperation.note[AOKANA_SENTENCE_FIELD],
                 changeOperation.newSentence,
                 changeOperation.note[AOKANA_SENTENCE_AUDIO_FIELD],

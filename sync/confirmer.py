@@ -13,7 +13,7 @@ class ChangeConfirmer():
                 if changed:
                     changeOperation.flush()
                     changes += 1
-            except Exception as e:
+            except:
                 failures += 1
 
         if changes > 0:
