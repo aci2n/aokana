@@ -62,7 +62,7 @@ class Syncer():
                     notify('had no matches')
                     continue
 
-                match = args.conflictResolver.resolve(note, matches)
+                match = args.conflictResolver.resolve(expression, matches)
 
                 if match == None:
                     notify('skipped while resolving conflict')
