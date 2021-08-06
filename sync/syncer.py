@@ -45,7 +45,8 @@ class Syncer():
 
     def sync(self, args, cancel):
         changeOperations = []
-        index = -1
+        index = 0
+        size = sum(len(notePack['notes']) for notePack in args.notePacks)
 
         for notePack in args.notePacks:
             notes = notePack['notes']
@@ -59,7 +60,7 @@ class Syncer():
                     return changeOperations
 
                 def notify(message):
-                    self.notifyUpdate(message, note[mappings['expressionField']], index)
+                    self.notifyUpdate(message, note[mappings['expressionField']], index, size)
 
                 if note == None:
                     notify('invalid note')

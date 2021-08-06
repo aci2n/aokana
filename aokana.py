@@ -35,9 +35,9 @@ class Aokana():
 
         return dialog
 
-    def onSyncUpdate(self, message, expression, index):
+    def onSyncUpdate(self, message, expression, index, max):
         print(message)
-        self.progress.update('Processed %s...' % expression, index)
+        self.progress.update('Processed %s... (%d/%d)' % (expression, index, max), index, max=max)
     
     def onSyncConfirmed(self, changeOperations, sourceDialog):
         changes = self.changeConfirmer.confirm(changeOperations)
@@ -50,8 +50,7 @@ class Aokana():
     def syncEntries(self, currentNote, extendedQuery, skipTagged, resolveManually):
         try:
             args = self.syncArgumentsFetcher.fetch(extendedQuery, skipTagged, resolveManually)
-            self.progress.start(sum(len(notePack['notes']) for notePack in args.notePacks), parent=self.syncDialog)
-            self.progress._showWin()
+            self.progress.start(parent=self.syncDialog)
             changeOperations = self.syncer.sync(args, lambda: self.progress.want_cancel())
             self.progress.finish()
 
