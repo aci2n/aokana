@@ -43,8 +43,9 @@ class Syncer():
 
         return audioFile
 
-    def sync(self, args):
+    def sync(self, args, cancel):
         changeOperations = []
+        index = -1
 
         for notePack in args.notePacks:
             notes = notePack['notes']
@@ -54,8 +55,11 @@ class Syncer():
             for note in notes:
                 index = index + 1
 
+                if cancel():
+                    return changeOperations
+
                 def notify(message):
-                    self.notifyUpdate(note, message, index, mappings)
+                    self.notifyUpdate(message, note[mappings['expressionField']], index)
 
                 if note == None:
                     notify('invalid note')
