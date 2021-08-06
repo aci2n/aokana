@@ -1,4 +1,4 @@
-from anki.utils import json
+from anki.utils import json, os
 
 from ..exceptions import EntriesParseException, InvalidEntriesException
 
@@ -9,18 +9,25 @@ class EntriesLoader():
     def escapeText(self, text):
         return text.replace('\\n', '').replace('\n', '').replace('\u3000', ' ')
 
-    def validateEntries(self, entries):
+    def validateEntries(self, entries, audioDirectory):
         validated = []
 
         for audioKey, text in entries.items():
-            if isinstance(audioKey, str) and isinstance(text, str):
-                validated.append(Entry(audioKey.lower(), self.escapeText(text)))
-            else:
+            if not isinstance(audioKey, str) or not isinstance(text, str):
                 return None
+
+            lowerCaseAudioKey = audioKey.lower()
+            path = os.path.join(audioDirectory, lowerCaseAudioKey)
+            
+            if not os.path.isfile(path):
+                print('not a file: %s, skipping' % path)
+                continue
+            
+            validated.append(Entry(lowerCaseAudioKey, self.escapeText(text), path))
 
         return validated
 
-    def getEntries(self, file):
+    def getEntries(self, file, audioDirectory):
         if self.entries == None:
             entries = None
             
@@ -30,7 +37,7 @@ class EntriesLoader():
             except:
                 raise EntriesParseException(file)
 
-            entries = self.validateEntries(entries)
+            entries = self.validateEntries(entries, audioDirectory)
 
             if entries == None:
                 raise InvalidEntriesException(file)
@@ -40,6 +47,7 @@ class EntriesLoader():
         return self.entries
 
 class Entry():
-    def __init__(self, key, text):
+    def __init__(self, key, text, path):
         self.key = key
         self.text = text
+        self.path = path

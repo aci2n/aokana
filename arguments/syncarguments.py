@@ -15,7 +15,7 @@ class SyncArgumentsFetcher():
 
     def fetch(self, extendedQuery, skipTagged, resolveManually):
         config = self.configValidator.validate()
-        entries = self.entriesLoader.getEntries(config.entriesFile)
+        entries = self.entriesLoader.getEntries(config.entriesFile, config.audioDirectory)
         conflictResolver = self.manualConflictResolver if resolveManually else self.automaticConflictResolver
         notePacks = []
 

@@ -66,7 +66,7 @@ class Syncer():
 
                 changeOperation.newSentence = match.text
                 changeOperation.newSentenceAudio = '[sound:%s]' % match.key
-                changeOperation.sentenceAudioFile = os.path.join(args.audioDirectory, match.key)
+                changeOperation.sentenceAudioFile = match.path
 
                 notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
             
