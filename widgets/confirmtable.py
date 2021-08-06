@@ -1,5 +1,6 @@
 
 from aqt import qt
+from ..sync.changeop import AOKANA_SENTENCE_FIELD, AOKANA_SENTENCE_AUDIO_FIELD  
 
 class ConfirmTable(qt.QTableWidget):
     def __init__(self):
@@ -7,7 +8,7 @@ class ConfirmTable(qt.QTableWidget):
         self.initUI()
 
     def initUI(self):
-        self.headers = ['Id', 'Expression', 'Current Sentence', 'New Sentence', 'New Audio']
+        self.headers = ['Id', 'Type', 'Expression', 'Old Sentence', 'New Sentence', 'Old Audio', 'New Audio']
         self.backgrounds = {
             'changed': qt.QColor('#f39c12'),
             'unchanged': qt.QColor('#ffffff'),
@@ -35,9 +36,11 @@ class ConfirmTable(qt.QTableWidget):
             background = self.getBackground(changeOperation)
             fields = enumerate([
                 changeOperation.note.id,
+                changeOperation.noteType,
                 changeOperation.note[changeOperation.noteMappings['expressionField']],
-                changeOperation.note[changeOperation.noteMappings['sentenceField']],
+                changeOperation.note[AOKANA_SENTENCE_FIELD],
                 changeOperation.newSentence,
+                changeOperation.note[AOKANA_SENTENCE_AUDIO_FIELD],
                 changeOperation.newSentenceAudio
             ])
 

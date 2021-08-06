@@ -22,7 +22,7 @@ class SyncArgumentsFetcher():
         for noteType, noteMappings in config.noteMappings.items():
             query = self.queryBuilder.build(noteType, skipTagged, extendedQuery)
             notes = self.getNotes(query)
-            notePacks.append({'notes': notes, 'mappings': noteMappings})
+            notePacks.append({'notes': notes, 'mappings': noteMappings, 'type': noteType})
 
         return SyncArguments(notePacks, entries, conflictResolver, config.audioDirectory)
 

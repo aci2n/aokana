@@ -44,6 +44,7 @@ class Syncer():
         for notePack in args.notePacks:
             notes = notePack['notes']
             mappings = notePack['mappings']
+            noteType = notePack['type']
             
             for index, note in enumerate(notes):
                 def notify(message):
@@ -53,7 +54,7 @@ class Syncer():
                     notify('invalid note')
                     continue
 
-                changeOperation = ChangeOperation(note, mappings)
+                changeOperation = ChangeOperation(note, noteType, mappings)
                 changeOperations.append(changeOperation)
 
                 matches = self.findMatches(note[mappings['sentenceField']], note[mappings['expressionField']], args.entries)

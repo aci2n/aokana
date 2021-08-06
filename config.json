@@ -2,7 +2,7 @@
     "entriesFile": "C:/Users/i2n/AppData/Roaming/Anki2/addons21/aokana/data/entries.json",
     "audioDirectory": "C:/Users/i2n/AppData/Roaming/Anki2/addons21/aokana/data/sounds",
     "noteMappings": {
-        "takoboto": {"expressionField": "Japanese", "sentenceField": "Sentence"},
+        "jp.takoboto": {"expressionField": "Japanese", "sentenceField": "Sentence"},
         "yomichan-word": {"expressionField": "expression", "sentenceField": "sentence"},
         "yomichan-sentence": {"expressionField": "expression", "sentenceField": "sentence"}
     }

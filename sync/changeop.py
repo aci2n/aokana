@@ -4,10 +4,11 @@ AOKANA_SENTENCE_FIELD = 'aokana_sentence'
 AOKANA_SENTENCE_AUDIO_FIELD = 'aokana_sentence_audio'
 
 class ChangeOperation():
-    def __init__(self, note, noteMappings):
+    def __init__(self, note, noteType, noteMappings):
         self.note = note
         self.newSentence = note[AOKANA_SENTENCE_FIELD]
         self.newSentenceAudio = note[AOKANA_SENTENCE_AUDIO_FIELD]
+        self.noteType = noteType
         self.noteMappings = noteMappings
 
     def hasFieldChanges(self):
