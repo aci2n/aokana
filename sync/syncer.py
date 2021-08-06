@@ -12,15 +12,18 @@ class Syncer():
 
     def findMatches(self, sentence, expression, entries):
         sentenceMatches = []
+        expressionMatches = []
         inflectionMatches = []
 
         for entry in entries:
             if sentence != '' and sentence in entry.text:
                 sentenceMatches.append(entry)
+            elif expression in entry.text:
+                expressionMatches.append(entry)
             elif any(inflection in entry.text for inflection in self.inflector.inflect(expression)):
                 inflectionMatches.append(entry)
 
-        return sentenceMatches + inflectionMatches
+        return sentenceMatches + expressionMatches + inflectionMatches
 
     def copyAudioFile(self, audioKey, audioDirectory):
         try:
@@ -48,7 +51,9 @@ class Syncer():
             mappings = notePack['mappings']
             noteType = notePack['type']
             
-            for index, note in enumerate(notes):
+            for note in notes:
+                index = index + 1
+
                 def notify(message):
                     self.notifyUpdate(note, message, index, mappings)
 
