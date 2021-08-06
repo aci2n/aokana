@@ -75,7 +75,6 @@ class Syncer():
                     notify('had no matches')
                     continue
 
-                matches.append(Entry('', note[mappings['sentenceField']]))
                 match = args.conflictResolver.resolve(note, matches)
 
                 if match == None:

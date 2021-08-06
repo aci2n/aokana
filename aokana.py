@@ -51,6 +51,7 @@ class Aokana():
         try:
             args = self.syncArgumentsFetcher.fetch(extendedQuery, skipTagged, resolveManually)
             self.progress.start(sum(len(notePack['notes']) for notePack in args.notePacks), parent=self.syncDialog)
+            self.progress._showWin()
             changeOperations = self.syncer.sync(args, lambda: self.progress.want_cancel())
             self.progress.finish()
 
