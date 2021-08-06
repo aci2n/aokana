@@ -40,8 +40,8 @@ class Aokana():
         self.progress.update('Processed %s... (%d/%d)' % (expression, index, max), index, max=max)
     
     def onSyncConfirmed(self, changeOperations, sourceDialog):
-        changes = self.changeConfirmer.confirm(changeOperations)
-        showInfo('Processed %d note(s) with %d update(s).' % (len(changeOperations), changes), sourceDialog)
+        changes, failures = self.changeConfirmer.confirm(changeOperations)
+        showInfo('Processed %d note(s) with %d update(s) and %d failure(s).' % (len(changeOperations), changes, failures), sourceDialog)
 
     def shouldStopBeforeConfirmation(self, currentNote, changeOperations):
         count = len(changeOperations)

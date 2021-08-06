@@ -25,24 +25,6 @@ class Syncer():
 
         return sentenceMatches + expressionMatches + inflectionMatches
 
-    def copyAudioFile(self, audioKey, audioDirectory):
-        try:
-            return self.createMedia(os.path.join(audioDirectory, audioKey))
-        except Exception as e:
-            print('error creating media file', e)
-            return None
-
-    def getSentenceAudio(self, audioKey, audioDirectory):
-        audioFile = ''
-
-        if audioKey != '':
-            audioFile = self.copyAudioFile(audioKey, audioDirectory)
-
-            if audioFile != None:
-                audioFile = '[sound:%s]' % audioFile
-
-        return audioFile
-
     def sync(self, args, cancel):
         changeOperations = []
         index = 0
@@ -54,7 +36,7 @@ class Syncer():
             noteType = notePack['type']
             
             for note in notes:
-                index = index + 1
+                index += 1
 
                 if cancel():
                     return changeOperations
@@ -66,7 +48,7 @@ class Syncer():
                     notify('invalid note')
                     continue
 
-                changeOperation = ChangeOperation(note, noteType, mappings)
+                changeOperation = ChangeOperation(note, noteType, mappings, self.createMedia)
                 changeOperations.append(changeOperation)
 
                 matches = self.findMatches(note[mappings['sentenceField']], note[mappings['expressionField']], args.entries)
@@ -82,14 +64,10 @@ class Syncer():
                     notify('skipped while resolving conflict')
                     continue
 
-                sentenceAudio = self.getSentenceAudio(match.key, args.audioDirectory)
-
-                if sentenceAudio == None:
-                    notify('invalid audio key')
-                    continue
-
                 changeOperation.newSentence = match.text
-                changeOperation.newSentenceAudio = sentenceAudio
+                changeOperation.newSentenceAudio = '[sound:%s]' % match.key
+                changeOperation.sentenceAudioFile = os.path.join(args.audioDirectory, match.key)
+
                 notify('match found, audio: %s - sentence: %s' % (changeOperation.newSentenceAudio, changeOperation.newSentence))
             
         return changeOperations
