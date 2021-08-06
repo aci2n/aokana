@@ -2,23 +2,25 @@ from anki.utils import os
 
 from .changeop import ChangeOperation
 from ..arguments.entriesloader import Entry
+from .inflector import Inflector
 
 class Syncer():
     def __init__(self, notifyUpdate, createMedia):
         self.createMedia = createMedia
         self.notifyUpdate = notifyUpdate
+        self.inflector = Inflector()
 
     def findMatches(self, sentence, expression, entries):
         sentenceMatches = []
-        expressionMatches = []
+        inflectionMatches = []
 
         for entry in entries:
             if sentence != '' and sentence in entry.text:
                 sentenceMatches.append(entry)
-            elif expression in entry.text:
-                expressionMatches.append(entry)
+            elif any(inflection in entry.text for inflection in self.inflector.inflect(expression)):
+                inflectionMatches.append(entry)
 
-        return sentenceMatches + expressionMatches
+        return sentenceMatches + inflectionMatches
 
     def copyAudioFile(self, audioKey, audioDirectory):
         try:
