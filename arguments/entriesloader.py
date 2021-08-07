@@ -11,19 +11,19 @@ class EntriesLoader():
 
     def validateEntries(self, entries, audioDirectory):
         validated = []
+        validFiles = set(os.listdir(audioDirectory))
 
         for audioKey, text in entries.items():
             if not isinstance(audioKey, str) or not isinstance(text, str):
                 return None
 
             lowerCaseAudioKey = audioKey.lower()
-            path = os.path.join(audioDirectory, lowerCaseAudioKey)
-            
-            if not os.path.isfile(path):
-                print('not a file: %s, skipping' % path)
+
+            if lowerCaseAudioKey not in validFiles:
+                print('not a file: %s, skipping' % lowerCaseAudioKey)
                 continue
             
-            validated.append(Entry(lowerCaseAudioKey, self.escapeText(text), path))
+            validated.append(Entry(lowerCaseAudioKey, self.escapeText(text), os.path.join(audioDirectory, lowerCaseAudioKey)))
 
         return validated
 
