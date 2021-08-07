@@ -56,7 +56,8 @@ class Aokana():
             self.progress.finish()
 
             if self.shouldStopBeforeConfirmation(currentNote, changeOperations):
-                showInfo('No changes available for %s' % currentNote['expression'], self.api.window)
+                expression = currentNote[self.config['noteMappings'][self.api.getNoteType(currentNote)]['expressionField']]
+                showInfo('No changes available for %s' % expression, self.api.window)
             else:
                 self.syncDialog.showConfirmDialog(changeOperations)
         except SyncArgumentsException as e:
@@ -69,7 +70,7 @@ class Aokana():
     def openSyncDialog(self):
         note = self.api.getCurrentReviewerNote()
 
-        if note != None and self.api.isNoteOfType(note, self.config['noteType']):
+        if note != None and any(self.api.isNoteOfType(note, noteType) for noteType in self.config['noteMappings']):
             self.syncEntries(note, 'nid:%d' % note.id, False, True)
             return
 

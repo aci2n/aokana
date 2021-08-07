@@ -39,8 +39,11 @@ class Anki():
 
         return note
     
+    def getNoteType(self, note):
+        return note.model()['name']
+    
     def isNoteOfType(self, note, modelName):
-        return note.model()['name'] == modelName
+        return self.getNoteType(note) == modelName
 
     def getProgress(self):
         return self.window.progress
