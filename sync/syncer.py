@@ -4,26 +4,35 @@ from .changeop import ChangeOperation
 from ..arguments.entriesloader import Entry
 from .inflector import Inflector
 
+
+
 class Syncer():
+    READING_MATCH_CUTOFF = 4
+
     def __init__(self, notifyUpdate, createMedia):
         self.createMedia = createMedia
         self.notifyUpdate = notifyUpdate
         self.inflector = Inflector()
 
-    def findMatches(self, sentence, expression, entries):
+    def findMatches(self, sentence, expression, reading, entries):
         sentenceMatches = []
         expressionMatches = []
+        readingMatches = []
         inflectionMatches = []
+        useReading = len(reading) >= Syncer.READING_MATCH_CUTOFF
+        inflections = self.inflector.inflect(expression)
 
         for entry in entries:
             if sentence != '' and sentence in entry.text:
                 sentenceMatches.append(entry)
             elif expression in entry.text:
                 expressionMatches.append(entry)
-            elif any(inflection in entry.text for inflection in self.inflector.inflect(expression)):
+            elif useReading and reading in entry.text:
+                readingMatches.append(entry)
+            elif any(inflection in entry.text for inflection in inflections):
                 inflectionMatches.append(entry)
 
-        return sentenceMatches + expressionMatches + inflectionMatches
+        return sentenceMatches + expressionMatches + readingMatches + inflectionMatches
 
     def sync(self, args, cancel):
         changeOperations = []
@@ -36,6 +45,7 @@ class Syncer():
             noteType = notePack['type']
             expressionField = mappings['expressionField']
             sentenceField = mappings['sentenceField']
+            readingField = mappings['readingField'] if 'readingField' in mappings else None
             
             for note in notes:
                 if cancel():
@@ -44,6 +54,7 @@ class Syncer():
                 index += 1
                 expression = note[expressionField]
                 sentence = note[sentenceField]
+                reading = note[readingField] if readingField != None else ''
 
                 def notify(message):
                     self.notifyUpdate(message, expression, index, size)
@@ -55,7 +66,7 @@ class Syncer():
                 changeOperation = ChangeOperation(note, noteType, expression, self.createMedia)
                 changeOperations.append(changeOperation)
 
-                matches = self.findMatches(sentence, expression, args.entries)
+                matches = self.findMatches(sentence, expression, reading, args.entries)
                 count = len(matches)
 
                 if count == 0:

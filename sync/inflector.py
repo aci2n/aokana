@@ -20,4 +20,4 @@ class Inflector:
         root = expression[0:-1]
         inflections = INFLECTIONS[suffix]
 
-        return map(lambda inflection: root + inflection, inflections)
+        return list(map(lambda inflection: root + inflection, inflections))
